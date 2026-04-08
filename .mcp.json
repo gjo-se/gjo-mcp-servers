@@ -1,0 +1,25 @@
+{
+  "servers": {
+    "scraper-server": {
+      "type": "http",
+      "url": "http://localhost:8001/mcp"
+    },
+    "analyzer-server": {
+      "type": "http",
+      "url": "http://localhost:8002/mcp"
+    },
+    "storage-server": {
+      "type": "http",
+      "url": "http://localhost:8003/mcp"
+    },
+    "doc-server": {
+      "type": "http",
+      "url": "http://localhost:8004/mcp"
+    },
+    "playwright-mcp": {
+      "type": "http",
+      "url": "http://localhost:8005/mcp"
+    }
+  }
+}
+
