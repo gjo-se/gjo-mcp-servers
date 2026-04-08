@@ -3,9 +3,13 @@ name = "gjo-mcp-servers"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "aiosqlite>=0.21",
+    "alembic>=1.16",
+    "asyncpg>=0.30",
     "fastmcp==3.2.0",
     "playwright>=1.54",
     "pydantic-settings>=2.7",
+    "sqlalchemy>=2.0",
 ]
 
 [dependency-groups]
