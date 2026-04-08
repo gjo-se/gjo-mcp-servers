@@ -6,6 +6,9 @@ from fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
+from servers.storage_server.tools.query_top_skills import query_top_skills
+from servers.storage_server.tools.save_layout_snapshot import save_layout_snapshot
+from servers.storage_server.tools.save_skill_frequency import save_skill_frequency
 from shared.config import settings
 from shared.logging import configure_logging, get_logger
 
@@ -29,6 +32,21 @@ mcp = FastMCP(
     name=SERVER_NAME,
     instructions="Storage MCP server with SQLAlchemy persistence foundation.",
     lifespan=storage_lifespan,
+)
+mcp.tool(
+    save_skill_frequency,
+    name="save_skill_frequency",
+    description="Create or update persisted skill frequency entries.",
+)
+mcp.tool(
+    query_top_skills,
+    name="query_top_skills",
+    description="Return top skills ordered by persisted frequency.",
+)
+mcp.tool(
+    save_layout_snapshot,
+    name="save_layout_snapshot",
+    description="Persist layout snapshots for scraper recovery workflows.",
 )
 
 
