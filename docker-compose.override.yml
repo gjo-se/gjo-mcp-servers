@@ -1,7 +1,7 @@
 services:
   doc-server:
     build: .
-    command: ["python", "-m", "servers.doc_server.server"]
+    command: ["uv", "run", "python", "-m", "servers.doc_server.server"]
     environment:
       HOST: 0.0.0.0
       PORT_DOC: ${PORT_DOC}
