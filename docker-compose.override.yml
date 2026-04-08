@@ -1,0 +1,28 @@
+services:
+  doc-server:
+    build: .
+    command: ["python", "-m", "servers.doc_server.server"]
+    environment:
+      HOST: 0.0.0.0
+      PORT_DOC: ${PORT_DOC}
+      LOG_LEVEL: ${LOG_LEVEL}
+      TAVILY_API_KEY: ${TAVILY_API_KEY}
+    ports:
+      - "${PORT_DOC}:8004"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8004/health')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - mcp_internal
+      - mcp_external
+
