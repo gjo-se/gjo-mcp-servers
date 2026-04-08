@@ -35,8 +35,8 @@ mcp.tool(
     scrape_freelancermap,
     name="scrape_freelancermap",
     description=(
-        "Stub tool for future freelancermap scraping. "
-        "Full implementation arrives in T-08."
+        "Scrape structured freelancermap search results for a query. "
+        "Raises a layout error if expected result cards are missing."
     ),
 )
 
