@@ -105,5 +105,3 @@ async def test_save_layout_snapshot_persists_snapshot_data(
     assert snapshots[0].url == "https://example.test/search"
     assert snapshots[0].selector == "article.result-card"
     assert snapshots[0].snapshot_content == "<tree>snapshot</tree>"
-
-

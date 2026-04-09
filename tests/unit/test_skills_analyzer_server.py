@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from starlette.testclient import TestClient
 
-from servers.skills_analyzer_server.server import app, mcp
+from servers.skills_analyzer_server.server import MCP_PATH, mcp
 from servers.skills_analyzer_server.tools.analyze_frequency import analyze_frequency
 from servers.skills_analyzer_server.tools.normalize_skills import normalize_skills
 
@@ -42,7 +42,9 @@ def test_analyze_frequency_counts_and_sorts_correctly() -> None:
 
 def test_health_endpoint_returns_ok_payload() -> None:
     """Health endpoint should answer with the expected payload."""
-    with TestClient(app) as client:
+    test_app = mcp.http_app(path=MCP_PATH, transport="http")
+
+    with TestClient(test_app) as client:
         response = client.get("/health")
 
     assert response.status_code == 200
@@ -60,4 +62,3 @@ async def test_tools_are_registered() -> None:
 
     assert normalize_tool is not None
     assert frequency_tool is not None
-

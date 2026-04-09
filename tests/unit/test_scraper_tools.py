@@ -69,4 +69,3 @@ def test_layout_changed_error_exposes_url_selector_and_timestamp(
     assert error.url
     assert error.selector
     assert error.timestamp
-

@@ -52,4 +52,3 @@ def test_invalid_port_type_raises_validation_error(
 
     with pytest.raises(ValidationError):
         Settings()
-

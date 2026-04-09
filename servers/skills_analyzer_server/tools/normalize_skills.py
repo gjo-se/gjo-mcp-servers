@@ -40,4 +40,3 @@ def normalize_skills(raw_skills: list[str]) -> list[str]:
         for normalized_skill in (_normalize_single_skill(skill) for skill in raw_skills)
         if normalized_skill
     ]
-

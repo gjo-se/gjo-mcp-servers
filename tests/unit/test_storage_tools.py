@@ -49,9 +49,7 @@ async def test_save_skill_frequency_returns_true_and_persists_entry(
 
     async with patched_session_factory() as session:
         skill = (
-            await session.execute(
-                select(Skill).where(Skill.name == "python")
-            )
+            await session.execute(select(Skill).where(Skill.name == "python"))
         ).scalar_one()
         freq = (
             await session.execute(
@@ -111,5 +109,3 @@ async def test_query_top_skills_returns_empty_list_when_database_is_empty(
     result = await query_top_skills(limit=20)
 
     assert result == []
-
-

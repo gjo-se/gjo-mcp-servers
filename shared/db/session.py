@@ -43,5 +43,3 @@ def get_session_factory(
         class_=AsyncSession,
         expire_on_commit=False,
     )
-
-

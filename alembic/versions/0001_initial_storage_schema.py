@@ -80,5 +80,3 @@ def downgrade() -> None:
     op.drop_table("skill")
     op.drop_index(op.f("ix_layout_snapshot_url"), table_name="layout_snapshot")
     op.drop_table("layout_snapshot")
-
-

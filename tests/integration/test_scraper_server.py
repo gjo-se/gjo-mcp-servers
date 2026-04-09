@@ -79,5 +79,3 @@ async def test_scrape_freelancermap_raises_layout_error_on_empty_html(
     error_text = result.content[0].text
     assert RESULT_SELECTOR in error_text
     assert _MOCK_URL in error_text
-
-

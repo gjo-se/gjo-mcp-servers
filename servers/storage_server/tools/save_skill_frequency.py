@@ -77,5 +77,3 @@ async def save_skill_frequency(
         await session.commit()
 
     return True
-
-

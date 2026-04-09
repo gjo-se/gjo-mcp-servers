@@ -88,5 +88,3 @@ def extract_pagination_info(html: str) -> dict[str, int | bool]:
         "total_pages": total_pages,
         "has_next": has_next,
     }
-
-

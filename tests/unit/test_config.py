@@ -34,4 +34,3 @@ def test_settings_override_via_env(monkeypatch) -> None:
     assert settings.port_scraper == 9001
     assert settings.log_level == "DEBUG"
     assert settings.tavily_api_key == "secret"
-

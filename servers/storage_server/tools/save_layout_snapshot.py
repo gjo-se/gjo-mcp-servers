@@ -60,4 +60,3 @@ async def save_layout_snapshot(
         await session.commit()
 
     return True
-
