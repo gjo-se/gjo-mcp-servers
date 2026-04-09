@@ -1,3 +1,6 @@
+# Current default service for local development.
+# Together with the `full-stack` profile in `docker-compose.yml`,
+# `docker compose up -d` starts only this service.
 services:
   doc-server:
     build: .
