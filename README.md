@@ -22,6 +22,15 @@ Die permanente Referenz für diesen Zustand liegt in
 Die kanonische MCP-Client-Konfiguration ist `.mcp.json` im Repo-Root.
 Sie enthält im aktuellen Default **nur** `doc-server`.
 
+### Betriebsentscheidungen für den aktuellen Stand
+
+- `doc-server` bleibt technisch in `docker-compose.override.yml`
+- lokal ist er trotzdem der **kanonische Default**, weil Docker Compose das Override automatisch lädt
+- PostgreSQL ist für den heutigen `mcpdoc`-Pfad **nicht erforderlich**
+- `PORT_DOC` und `LOG_LEVEL` sind die relevanten Pflichtvariablen
+- `TAVILY_API_KEY` bleibt optional für den Web-Search-Fallback
+- alle weiteren Services sind bewusst **nicht** Teil des heutigen Standards
+
 ## Services
 
 | Service | Port | Status | Beschreibung |

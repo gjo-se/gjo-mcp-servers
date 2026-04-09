@@ -36,6 +36,17 @@ Nicht Teil des heutigen Default-Setups:
 Diese Dienste bleiben vorhanden, sind aber aktuell **opt-in** über das Compose-Profil
 `full-stack`.
 
+### Explizite Betriebsentscheidungen
+
+Für den aktuellen Projektstand gelten bewusst diese Entscheidungen:
+
+1. `doc-server` bleibt in `docker-compose.override.yml`.
+2. Der lokale Standardbefehl bleibt trotzdem `docker compose up -d`, weil das Override lokal automatisch geladen wird.
+3. PostgreSQL ist für den heutigen `mcpdoc`-Default nicht nötig.
+4. Pflichtvariablen sind `PORT_DOC` und `LOG_LEVEL`.
+5. `TAVILY_API_KEY` ist nur für den Fallback `web_search_documentation` optional relevant.
+6. Alle weiteren MCP-Server gehören aktuell nicht zum kanonischen Default.
+
 ---
 
 ## Benötigte Dateien
