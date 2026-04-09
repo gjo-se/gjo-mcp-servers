@@ -22,4 +22,3 @@ def configure_logging() -> None:
 def get_logger(name: str) -> logging.Logger:
     """Gibt einen benannten Logger zurück."""
     return logging.getLogger(name)
-

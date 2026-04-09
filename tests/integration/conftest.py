@@ -76,4 +76,3 @@ def empty_html() -> str:
         Minimal HTML string with an empty results section.
     """
     return "<html><body><section class='results'></section></body></html>"
-

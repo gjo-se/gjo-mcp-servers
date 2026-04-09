@@ -8,7 +8,7 @@ from sqlalchemy import create_engine, inspect
 from starlette.testclient import TestClient
 
 from alembic import command
-from servers.storage_server.server import app
+from servers.storage_server.server import MCP_PATH, mcp
 from shared.db.base import Base
 from shared.models.skill import LayoutSnapshot, Skill, SkillFrequency
 
@@ -45,11 +45,10 @@ def test_initial_migration_creates_all_tables() -> None:
 
 def test_storage_server_health_endpoint_returns_ok_payload() -> None:
     """Health endpoint should answer with the expected payload."""
-    with TestClient(app) as client:
+    test_app = mcp.http_app(path=MCP_PATH, transport="http")
+
+    with TestClient(test_app) as client:
         response = client.get("/health")
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok", "server": "storage-server"}
-
-
-

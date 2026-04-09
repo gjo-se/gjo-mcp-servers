@@ -41,4 +41,3 @@ def test_get_logger_returns_logger_with_correct_name() -> None:
 
     assert isinstance(logger, logging.Logger)
     assert logger.name == "mcp.test.module"
-

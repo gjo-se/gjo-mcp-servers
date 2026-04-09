@@ -3,12 +3,14 @@
 import pytest
 from starlette.testclient import TestClient
 
-from servers.scraper_server.server import app, mcp
+from servers.scraper_server.server import MCP_PATH, mcp
 
 
 def test_health_endpoint_returns_ok_payload() -> None:
     """Health endpoint should answer with the expected payload."""
-    with TestClient(app) as client:
+    test_app = mcp.http_app(path=MCP_PATH, transport="http")
+
+    with TestClient(test_app) as client:
         response = client.get("/health")
 
     assert response.status_code == 200
@@ -21,5 +23,3 @@ async def test_scrape_freelancermap_tool_is_registered() -> None:
     tool = await mcp.get_tool("scrape_freelancermap")
 
     assert tool is not None
-
-

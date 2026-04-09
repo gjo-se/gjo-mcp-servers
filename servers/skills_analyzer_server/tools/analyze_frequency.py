@@ -27,4 +27,3 @@ def analyze_frequency(skills: list[str]) -> list[SkillFrequency]:
         SkillFrequency(skill=skill_name, count=count)
         for skill_name, count in ordered_counts
     ]
-

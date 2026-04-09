@@ -35,7 +35,7 @@ class LayoutChangedError(RuntimeError):
     def __post_init__(self) -> None:
         RuntimeError.__init__(
             self,
-            f"Layout changed for {self.url} (selector={self.selector}): {self.detail}"
+            f"Layout changed for {self.url} (selector={self.selector}): {self.detail}",
         )
 
 
@@ -88,5 +88,3 @@ def scrape_freelancermap(query: str) -> list[ScrapedProject]:
         )
 
     return [ScrapedProject(**row) for row in rows]
-
-

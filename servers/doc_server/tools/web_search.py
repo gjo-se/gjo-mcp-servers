@@ -20,10 +20,13 @@ DOCUMENTATION_DOMAINS = [
 
 def build_tavily_search_tool() -> TavilySearch:
     """Build the Tavily search tool with a strict documentation domain filter."""
-    api_key = settings.tavily_api_key.strip() or os.environ.get(
-        "TAVILY_API_KEY",
-        "",
-    ).strip()
+    api_key = (
+        settings.tavily_api_key.strip()
+        or os.environ.get(
+            "TAVILY_API_KEY",
+            "",
+        ).strip()
+    )
     if not api_key:
         raise ValueError("TAVILY_API_KEY is required for documentation web search")
 
@@ -60,5 +63,3 @@ def web_search_documentation(query: str, max_results: int = 3) -> dict[str, Any]
     tavily_tool = build_tavily_search_tool()
     tavily_tool.max_results = max_results
     return tavily_tool.invoke({"query": query})
-
-

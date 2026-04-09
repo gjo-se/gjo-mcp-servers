@@ -151,9 +151,3 @@ async def test_layout_recovery_workflow_error_to_snapshot_persistence(
     assert snapshot is not None
     assert "simulated accessibility snapshot" in snapshot.snapshot_content
     assert snapshot.selector == "article.result-card"
-
-
-
-
-
-

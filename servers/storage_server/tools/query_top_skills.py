@@ -40,4 +40,3 @@ async def query_top_skills(limit: int = 20) -> list[SkillCount]:
         rows = result.all()
 
     return [SkillCount(skill=skill_name, count=count) for skill_name, count in rows]
-

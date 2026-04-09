@@ -35,7 +35,9 @@ def test_scrape_freelancermap_returns_structured_results(
 
     assert len(results) == 2
     assert results[0]["title"] == "Python Backend API Projekt"
-    assert results[0]["url"] == "https://www.freelancermap.de/project/python-backend-api"
+    assert (
+        results[0]["url"] == "https://www.freelancermap.de/project/python-backend-api"
+    )
     assert results[0]["skills_raw"] == "Python, FastAPI, PostgreSQL"
     assert "FastAPI-Schnittstelle" in results[0]["summary"]
 
@@ -72,5 +74,3 @@ def test_extract_pagination_info_returns_expected_metadata() -> None:
         "total_pages": 2,
         "has_next": True,
     }
-
-

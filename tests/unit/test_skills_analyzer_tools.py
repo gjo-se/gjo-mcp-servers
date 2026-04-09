@@ -35,4 +35,3 @@ def test_normalize_skills_handles_empty_input() -> None:
 def test_analyze_frequency_handles_empty_input() -> None:
     """analyze_frequency must return an empty list for empty input."""
     assert analyze_frequency([]) == []
-

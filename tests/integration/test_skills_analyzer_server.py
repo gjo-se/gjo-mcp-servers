@@ -32,8 +32,8 @@ async def test_normalize_skills_and_analyze_frequency_tools_are_registered() -> 
 
 @pytest.mark.integration
 async def test_normalize_skills_normalizes_casing_variants() -> None:
-    """normalize_skills must return lowercase-normalized labels for all casing variants.
-    """
+    """normalize_skills must return lowercase-normalized labels for all
+    casing variants."""
     async with Client(mcp) as client:
         result = await client.call_tool(
             "normalize_skills",
@@ -77,5 +77,3 @@ async def test_analyze_frequency_sorts_by_count_descending() -> None:
     second = frequencies[1]
     assert second["skill"] == "fastapi"
     assert second["count"] == 1
-
-

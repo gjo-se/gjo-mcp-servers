@@ -118,6 +118,3 @@ async def test_query_top_skills_on_empty_database_returns_empty_list(
 
     assert result.is_error is False
     assert result.structured_content["result"] == []
-
-
-
