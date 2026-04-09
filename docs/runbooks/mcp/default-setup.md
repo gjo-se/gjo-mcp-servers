@@ -23,6 +23,7 @@ Der aktuelle kanonische Default von `gjo-mcp-servers` ist:
 - **Service:** `doc_server`
 - **Zweck:** `mcpdoc` / aktuelle Dokumentationsquellen
 - **Transportziel:** `http://localhost:8004/mcp`
+- **Kanonische Client-Konfiguration:** `.mcp.json` enthält aktuell nur `doc-server`
 
 Nicht Teil des heutigen Default-Setups:
 
@@ -51,6 +52,27 @@ Für den aktuellen Defaultpfad relevant:
 Permanente Referenz für den Setup-Zustand:
 
 - `docs/runbooks/mcp/default-setup.md`
+
+---
+
+## Kanonische `.mcp.json`
+
+Die Datei `.mcp.json` im Repo-Root ist die aktuelle Quelle der Wahrheit für den
+MCP-Client-Default.
+
+Im heutigen Stand enthält sie bewusst nur:
+
+- `doc-server` → `http://localhost:8004/mcp`
+
+Nicht Teil der kanonischen Default-Konfiguration:
+
+- `scraper-server`
+- `analyzer-server`
+- `storage-server`
+- `playwright-mcp`
+
+Diese Server können später wieder in eine erweiterte Konfiguration aufgenommen werden,
+gehören aber aktuell **nicht** zum Standard.
 
 ---
 
@@ -145,7 +167,8 @@ Erwartete Antwort:
 cat .mcp.json
 ```
 
-Für den aktuellen Defaultpfad muss `doc-server` als MCP-Endpunkt enthalten sein.
+Für den aktuellen Defaultpfad muss `doc-server` als MCP-Endpunkt enthalten sein,
+und es sollen keine weiteren Server in der kanonischen Datei stehen.
 
 ---
 

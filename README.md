@@ -19,6 +19,9 @@ Pfad über das Compose-Profil `full-stack`.
 Die permanente Referenz für diesen Zustand liegt in
 `docs/runbooks/mcp/default-setup.md`.
 
+Die kanonische MCP-Client-Konfiguration ist `.mcp.json` im Repo-Root.
+Sie enthält im aktuellen Default **nur** `doc-server`.
+
 ## Services
 
 | Service | Port | Status | Beschreibung |
@@ -65,6 +68,27 @@ Warum reicht `docker compose up -d`?
 - `doc_server` liegt in `docker-compose.override.yml`
 - alle weiteren Services in `docker-compose.yml` hängen am Profil `full-stack`
 - dadurch startet der Defaultpfad nur den aktuellen `mcpdoc`-Dienst
+
+## Kanonische `.mcp.json`
+
+Die Datei `.mcp.json` ist die aktuelle Quelle der Wahrheit für die Standard-MCP-Konfiguration.
+
+Im heutigen Default enthält sie bewusst nur:
+
+- `doc-server` → `http://localhost:8004/mcp`
+
+Damit ist klar getrennt:
+
+- **Default heute:** `doc-server`
+- **optional / später:** `scraper-server`, `analyzer-server`, `storage-server`, `playwright-mcp`
+
+Kurze Verifikation:
+
+```zsh
+cat .mcp.json
+```
+
+Erwartung: In der kanonischen Datei ist aktuell nur `doc-server` eingetragen.
 
 ## Stop / Logs
 
