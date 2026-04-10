@@ -7,7 +7,14 @@ import pytest
 from starlette.testclient import TestClient
 
 import servers.doc_server.server as doc_server_module
-from servers.doc_server.server import DOC_SOURCES, app, fetch_fastapi_docs, fetch_pydantic_docs, mcp
+from servers.doc_server.server import (
+    DOC_SOURCES,
+    app,
+    fetch_fastapi_docs,
+    fetch_langchain_docs,
+    fetch_pydantic_docs,
+    mcp,
+)
 from servers.doc_server.tools.web_search import DOCUMENTATION_DOMAINS
 
 
@@ -242,6 +249,42 @@ async def test_tavily_fallback_tool_is_registered() -> None:
     tool = await mcp.get_tool("web_search_documentation")
 
     assert tool is not None
+
+
+@pytest.mark.asyncio
+async def test_fetch_langchain_docs_uses_configured_source(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The LangChain docs tool should use the configured llms.txt source."""
+
+    async def fake_fetch(url: str) -> str:
+        assert url == DOC_SOURCES["langchain"]
+        return "LangChain current docs\nstructured output anchor"
+
+    monkeypatch.setattr(doc_server_module, "_fetch_llms_txt_content", fake_fetch)
+
+    result = await fetch_langchain_docs("structured output")
+
+    assert result["source"] == "langchain"
+    assert result["url"] == DOC_SOURCES["langchain"]
+    assert result["content"] == "structured output anchor"
+
+
+@pytest.mark.asyncio
+async def test_fetch_langchain_docs_returns_full_content_without_query(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The LangChain docs tool should return full content when no query is given."""
+
+    async def fake_fetch(url: str) -> str:
+        return "LangChain full docs content"
+
+    monkeypatch.setattr(doc_server_module, "_fetch_llms_txt_content", fake_fetch)
+
+    result = await fetch_langchain_docs()
+
+    assert result["source"] == "langchain"
+    assert result["content"] == "LangChain full docs content"
 
 
 def test_documentation_source_configuration_is_complete() -> None:
