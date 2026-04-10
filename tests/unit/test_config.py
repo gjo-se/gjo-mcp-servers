@@ -1,10 +1,13 @@
 """Unit Tests für shared/config.py."""
 
+import pytest
+
 from shared.config import Settings
 
 
-def test_settings_defaults() -> None:
+def test_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     """Settings-Defaults stimmen mit .env.example überein."""
+    monkeypatch.setenv("TAVILY_API_KEY", "")
     settings = Settings()
 
     assert settings.host == "0.0.0.0"

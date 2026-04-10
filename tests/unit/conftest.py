@@ -5,4 +5,3 @@ Pytest marks used in this suite:
   Skipped in normal CI; run manually with ``uv run pytest -m integration``.
 - ``slow``: Tests with significant runtime (> 5 s). Excluded from fast feedback loops.
 """
-

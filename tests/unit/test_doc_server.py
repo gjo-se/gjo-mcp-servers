@@ -73,7 +73,9 @@ async def test_fetch_fastapi_docs_falls_back_to_official_search(
                 {
                     "title": "Lifespan Events - FastAPI",
                     "url": "https://fastapi.tiangolo.com/advanced/events/",
-                    "content": "Use the lifespan parameter with an async context manager.",
+                    "content": (
+                        "Use the lifespan parameter with an async context manager."
+                    ),
                 }
             ],
         }
@@ -123,7 +125,9 @@ async def test_fetch_fastapi_docs_accepts_plain_string_search_fallback(
     result = await fetch_fastapi_docs("lifespan")
 
     assert result["resolved_via"] == "official_search_fallback"
-    assert result["content"] == "Use the lifespan parameter with an async context manager."
+    assert (
+        result["content"] == "Use the lifespan parameter with an async context manager."
+    )
 
 
 @pytest.mark.asyncio
@@ -152,12 +156,16 @@ async def test_fetch_fastapi_docs_accepts_json_string_search_fallback(
         assert "official FastAPI documentation" in description
         return json.dumps(
             {
-                "answer": "Use the lifespan parameter instead of startup/shutdown events.",
+                "answer": (
+                    "Use the lifespan parameter instead of startup/shutdown events."
+                ),
                 "results": [
                     {
                         "title": "Lifespan Events - FastAPI",
                         "url": "https://fastapi.tiangolo.com/advanced/events/",
-                        "content": "Use the lifespan parameter with an async context manager.",
+                        "content": (
+                            "Use the lifespan parameter with an async context manager."
+                        ),
                     }
                 ],
             }
@@ -177,12 +185,14 @@ async def test_fetch_fastapi_docs_accepts_json_string_search_fallback(
 async def test_fetch_pydantic_docs_falls_back_to_official_search(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The Pydantic docs tool should fall back to official-domain search on HTTP errors."""
+    """Pydantic docs tool falls back to official-domain search on HTTP errors."""
 
     async def fake_fetch(url: str) -> str:
         request = httpx.Request("GET", url)
         response = httpx.Response(status_code=301, request=request)
-        raise httpx.HTTPStatusError("Moved Permanently", request=request, response=response)
+        raise httpx.HTTPStatusError(
+            "Moved Permanently", request=request, response=response
+        )
 
     def fake_search(
         query: str,
@@ -193,17 +203,24 @@ async def test_fetch_pydantic_docs_falls_back_to_official_search(
         description: str,
     ) -> dict[str, object]:
         assert "model_validate" in query or query  # query forwarded
-        assert "docs.pydantic.dev" in include_domains or "pydantic.dev" in include_domains
+        assert (
+            "docs.pydantic.dev" in include_domains or "pydantic.dev" in include_domains
+        )
         assert max_results == 3
         assert include_answer is True
         assert "Pydantic" in description
         return {
-            "answer": "model_validate creates a model instance from data; model_dump serializes it.",
+            "answer": (
+                "model_validate creates a model instance from data;"
+                " model_dump serializes it."
+            ),
             "results": [
                 {
                     "title": "Validators - Pydantic",
                     "url": "https://docs.pydantic.dev/latest/concepts/validators/",
-                    "content": "Use model_validate to create a model from dict or object.",
+                    "content": (
+                        "Use model_validate to create a model from dict or object."
+                    ),
                 }
             ],
         }
@@ -225,7 +242,7 @@ async def test_fetch_pydantic_docs_falls_back_to_official_search(
 async def test_fetch_pydantic_docs_uses_configured_source(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The Pydantic docs tool should use the configured llms.txt source when available."""
+    """Pydantic docs tool uses the configured llms.txt source when available."""
 
     async def fake_fetch(url: str) -> str:
         assert url == DOC_SOURCES["pydantic"]
@@ -284,7 +301,10 @@ def test_web_search_documentation_returns_results(
     result = web_search_documentation("SQLAlchemy 2.x async_sessionmaker")
 
     assert "results" in result
-    assert result["results"][0]["title"] == "Asynchronous I/O — SQLAlchemy 2.1 Documentation"
+    assert (
+        result["results"][0]["title"]
+        == "Asynchronous I/O — SQLAlchemy 2.1 Documentation"
+    )
 
 
 def test_web_search_documentation_filters_to_configured_domains(
@@ -392,6 +412,7 @@ async def test_fetch_langgraph_docs_returns_full_content_without_query(
     assert result["source"] == "langgraph"
     assert result["content"] == "LangGraph full docs content"
 
+
 # ---------------------------------------------------------------------------
 # T-20a: Tests for fetch_fastmcp_docs
 # ---------------------------------------------------------------------------
@@ -423,7 +444,9 @@ async def test_fetch_fastmcp_docs_falls_back_on_http_error(
     async def fake_fetch(url: str) -> str:
         request = httpx.Request("GET", url)
         response = httpx.Response(status_code=503, request=request)
-        raise httpx.HTTPStatusError("Service Unavailable", request=request, response=response)
+        raise httpx.HTTPStatusError(
+            "Service Unavailable", request=request, response=response
+        )
 
     def fake_search(
         query: str,
@@ -536,7 +559,9 @@ async def test_fetch_pycharm_docs_falls_back_on_http_error(
     async def fake_fetch(url: str) -> str:
         request = httpx.Request("GET", url)
         response = httpx.Response(status_code=503, request=request)
-        raise httpx.HTTPStatusError("Service Unavailable", request=request, response=response)
+        raise httpx.HTTPStatusError(
+            "Service Unavailable", request=request, response=response
+        )
 
     def fake_search(
         query: str,
@@ -574,8 +599,12 @@ async def test_fetch_pycharm_docs_falls_back_on_http_error(
 def test_documentation_source_configuration_is_complete() -> None:
     """DOC_SOURCES and DOCUMENTATION_DOMAINS must contain all expected entries."""
     assert set(DOC_SOURCES.keys()) == {
-        "fastapi", "pydantic", "langchain", "langgraph",
-        "fastmcp", "pycharm",
+        "fastapi",
+        "pydantic",
+        "langchain",
+        "langgraph",
+        "fastmcp",
+        "pycharm",
     }
     assert "www.python-httpx.org" in DOCUMENTATION_DOMAINS
     assert "playwright.dev" in DOCUMENTATION_DOMAINS
@@ -592,10 +621,13 @@ def test_documentation_source_configuration_is_complete() -> None:
 # ---------------------------------------------------------------------------
 @pytest.mark.integration
 @pytest.mark.asyncio
-@pytest.mark.parametrize("tool_fn,query,expected_keyword", [
-    (fetch_fastmcp_docs, "tool decorator", "fastmcp"),
-    (fetch_pycharm_docs, "run configuration", "jetbrains"),
-])
+@pytest.mark.parametrize(
+    "tool_fn,query,expected_keyword",
+    [
+        (fetch_fastmcp_docs, "tool decorator", "fastmcp"),
+        (fetch_pycharm_docs, "run configuration", "jetbrains"),
+    ],
+)
 async def test_fetch_docs_live_probe(tool_fn, query, expected_keyword) -> None:
     """Live HTTP probe – verifies reachability and content of new llms.txt sources.
 
@@ -604,6 +636,6 @@ async def test_fetch_docs_live_probe(tool_fn, query, expected_keyword) -> None:
     """
     result = await tool_fn(query=query)
     assert result.get("content"), f"Empty response from {tool_fn.__name__}"
-    assert expected_keyword.lower() in result["content"].lower(), (
-        f"Expected keyword {expected_keyword!r} not found in {tool_fn.__name__} response"
-    )
+    assert (
+        expected_keyword.lower() in result["content"].lower()
+    ), f"Expected keyword {expected_keyword!r} not found in {tool_fn.__name__} response"
