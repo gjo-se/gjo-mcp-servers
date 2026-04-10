@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     port_storage: int = 8003
     port_doc: int = 8004
     port_playwright: int = 8005
+    port_web_search: int = 8006
 
     database_url: str = (
         "postgresql+asyncpg://postgres:postgres@localhost:5432/mcp_servers"

@@ -3,7 +3,10 @@
     "doc-server": {
       "type": "http",
       "url": "http://localhost:8004/mcp"
+    },
+    "web-search-server": {
+      "type": "http",
+      "url": "http://localhost:8006/mcp"
     }
   }
 }
-
