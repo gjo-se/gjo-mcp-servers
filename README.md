@@ -2,124 +2,100 @@
 
 MCP Server Collection for [gjo-se.com](https://github.com/gjo-se/gjo-se.com).
 
-Built with [fastmcp](https://github.com/jlowin/fastmcp) 3.2.0 · Python 3.12 · uv
+Built with [fastmcp](https://github.com/jlowin/fastmcp) · Python 3.12 · uv
 
-## Aktueller Default
+---
 
-Der aktuelle kanonische Einstieg ist **`doc_server` / `mcpdoc`**.
+## Schnelleinstieg
 
-- Standard-Startpfad: nur `doc_server`
-- kein PostgreSQL im Default notwendig
-- `scraper-server`, `analyzer-server`, `storage-server` und `playwright-mcp`
-  sind aktuell **nicht** Teil des verpflichtenden Default-Setups
-
-Der vollständige Mehrserver-Stack bleibt vorhanden, ist aber nur ein **opt-in**-
-Pfad über das Compose-Profil `full-stack`.
-
-Die permanente Referenz für diesen Zustand liegt in
-`docs/runbooks/mcp/default-setup.md`.
-
-Die kanonische MCP-Client-Konfiguration ist `.mcp.json` im Repo-Root.
-Sie enthält im aktuellen Default **nur** `doc-server`.
-
-### Betriebsentscheidungen für den aktuellen Stand
-
-- `doc-server` bleibt technisch in `docker-compose.override.yml`
-- lokal ist er trotzdem der **kanonische Default**, weil Docker Compose das Override automatisch lädt
-- PostgreSQL ist für den heutigen `mcpdoc`-Pfad **nicht erforderlich**
-- `PORT_DOC` und `LOG_LEVEL` sind die relevanten Pflichtvariablen
-- `TAVILY_API_KEY` bleibt optional für den Web-Search-Fallback
-- alle weiteren Services sind bewusst **nicht** Teil des heutigen Standards
-
-## Services
-
-| Service | Port | Status | Beschreibung |
-|---------|------|--------|--------------|
-| `doc_server` | 8004 | aktueller Default | `mcpdoc` + Tavily-Fallback für aktuelle Doku |
-| `scraper_server` | 8001 | optional / später | Playwright-Scraping (freelancermap.de) |
-| `analyzer_server` | 8002 | optional / später | Skill-Normalisierung & Analyse |
-| `storage_server` | 8003 | optional / später | domänenspezifische Storage-Tools |
-| `@playwright/mcp` | 8005 | optional / später | Browser-Automation & Layout-Recovery |
-| `postgres` | 5432 | optional / später | Datenbank für `storage_server` / Vollstack |
-
-## Setup
-
-Einmalig nach dem Klonen oder nur falls `.env` noch fehlt:
+### 1. Abhängigkeiten
 
 ```zsh
 uv sync
+```
+
+### 2. `.env` anlegen (einmalig)
+
+```zsh
 cp .env.example .env
 ```
 
-Für normale Starts sollte `.env` **nicht** jedes Mal neu aus `.env.example` kopiert werden,
-damit lokale Anpassungen nicht überschrieben werden.
+Pflichtfelder für den Default-Start:
 
-### Wichtige Variablen im aktuellen Default
+```dotenv
+PORT_DOC=8004
+PORT_WEB_SEARCH=8006
+LOG_LEVEL=INFO
+TAVILY_API_KEY=
+```
 
-- `PORT_DOC=8004`
-- `LOG_LEVEL=INFO`
-- `TAVILY_API_KEY=` ist **optional**, solange nur die `llms.txt`-Quellen genutzt werden
-
-PostgreSQL- und weitere Service-Variablen bleiben in `.env.example` erhalten,
-sind aber für den aktuellen `mcpdoc`-Default **nicht erforderlich**.
-
-## Default-Startpfad (`mcpdoc`)
+### 3. Server starten
 
 ```zsh
 docker compose up -d
-docker compose ps
+```
+
+Startet den aktuellen Default: **`doc-server`** (Port 8004) + **`web-search-server`** (Port 8006).
+
+### 4. Verifikation
+
+```zsh
 curl -fsS http://localhost:8004/health
+curl -fsS http://localhost:8006/health
 ```
 
-Erwartung:
-
-```json
-{"status":"ok","server":"doc-server"}
-```
-
-Warum reicht `docker compose up -d`?
-
-- `doc_server` liegt in `docker-compose.override.yml`
-- alle weiteren Services in `docker-compose.yml` hängen am Profil `full-stack`
-- dadurch startet der Defaultpfad nur den aktuellen `mcpdoc`-Dienst
-
-## Kanonische `.mcp.json`
-
-Die Datei `.mcp.json` ist die aktuelle Quelle der Wahrheit für die Standard-MCP-Konfiguration.
-
-Im heutigen Default enthält sie bewusst nur:
-
-- `doc-server` → `http://localhost:8004/mcp`
-
-Damit ist klar getrennt:
-
-- **Default heute:** `doc-server`
-- **optional / später:** `scraper-server`, `analyzer-server`, `storage-server`, `playwright-mcp`
-
-Kurze Verifikation:
+### 5. MCP-Client-Konfiguration
 
 ```zsh
 cat .mcp.json
 ```
 
-Erwartung: In der kanonischen Datei ist aktuell nur `doc-server` eingetragen.
+Die Datei `.mcp.json` ist die kanonische Quelle für die MCP-Client-Konfiguration
+(symlinkt zu `~/.config/github-copilot/intellij/mcp.json`).
 
-## Stop / Logs
+---
 
-```zsh
-docker compose logs -f doc-server
-docker compose stop doc-server
-docker compose down
-```
+## Services
 
-## Optional: Vollstack explizit starten
+| Service | Port | Default | Beschreibung |
+|---|---|---|---|
+| `doc_server` | 8004 | ja | llms.txt-Fetch + Tavily-Fallback für aktuelle Docs |
+| `web_search_server` | 8006 | ja | Tavily-Suche mit und ohne Domain-Filter |
+| `scraper_server` | 8001 | opt-in | Playwright-Scraping (freelancermap.de) |
+| `skills_analyzer_server` | 8002 | opt-in | Skill-Normalisierung und Frequenzanalyse |
+| `storage_server` | 8003 | opt-in | SQLAlchemy-Persistenz (PostgreSQL) |
 
-Dieser Pfad gehört **nicht** zum aktuellen Default-Setup.
+Opt-in (Full-Stack):
 
 ```zsh
 docker compose --profile full-stack up -d
 ```
 
-Dafür werden zusätzlich die in `.env.example` dokumentierten Ports und
-PostgreSQL-Variablen benötigt.
+---
 
+## Logs / Stop
+
+```zsh
+docker compose logs -f doc-server
+docker compose stop
+docker compose down
+```
+
+---
+
+## Tests
+
+```zsh
+uv run pytest
+uv run pytest --run-integration
+uv run pytest tests/ -k "web_search"
+```
+
+---
+
+## Dokumentation
+
+| Dokument | Inhalt |
+|---|---|
+| [default-setup.md](docs/runbooks/mcp/default-setup.md) | Kanonischer Start-Pfad, Variablen, Verifikation |
+| [mcp-server-blueprint.md](docs/runbooks/mcp/mcp-server-blueprint.md) | Dateistruktur, Konventionen, Vorlage für neue Server |
