@@ -59,11 +59,15 @@ Die Datei `.mcp.json` ist die kanonische Quelle für die MCP-Client-Konfiguratio
 
 | Service | Port | Default | Beschreibung |
 |---|---|---|---|
-| `doc_server` | 8004 | ja | llms.txt-Fetch + Tavily-Fallback für aktuelle Docs |
-| `web_search_server` | 8006 | ja | Tavily-Suche mit und ohne Domain-Filter |
-| `scraper_server` | 8001 | opt-in | Playwright-Scraping (freelancermap.de) |
-| `skills_analyzer_server` | 8002 | opt-in | Skill-Normalisierung und Frequenzanalyse |
-| `storage_server` | 8003 | opt-in | SQLAlchemy-Persistenz (PostgreSQL) |
+| `doc-server` | 8004 | ja¹ | llms.txt-Fetch + Tavily-Fallback für aktuelle Docs |
+| `web-search-server` | 8006 | ja¹ | Tavily-Suche mit und ohne Domain-Filter |
+| `scraper-server` | 8001 | opt-in | Playwright-Scraping (freelancermap.de) |
+| `analyzer-server` | 8002 | opt-in | Skill-Normalisierung und Frequenzanalyse |
+| `storage-server` | 8003 | opt-in | SQLAlchemy-Persistenz (PostgreSQL) |
+| `playwright-mcp` | – | opt-in | Playwright MCP Bridge |
+
+¹ `doc-server` und `web-search-server` sind in `docker-compose.override.yml` definiert
+und starten automatisch mit `docker compose up -d`.
 
 Opt-in (Full-Stack):
 
@@ -99,3 +103,8 @@ uv run pytest tests/ -k "web_search"
 |---|---|
 | [default-setup.md](docs/runbooks/mcp/default-setup.md) | Kanonischer Start-Pfad, Variablen, Verifikation |
 | [mcp-server-blueprint.md](docs/runbooks/mcp/mcp-server-blueprint.md) | Dateistruktur, Konventionen, Vorlage für neue Server |
+
+Shell-Helper für den Alltag (aus `gjo-se.com` heraus):
+→ [`scripts/shell/dev.zsh`](https://github.com/gjo-se/gjo-se.com/blob/develop/scripts/shell/dev.zsh) –
+`start_mcp_docker` / `stop_mcp_docker` / `build_mcp_docker` / `logs_mcp_docker`
+
