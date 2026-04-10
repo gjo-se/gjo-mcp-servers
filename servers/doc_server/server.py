@@ -11,7 +11,7 @@ from fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
-from servers.doc_server.tools.web_search import (
+from servers.web_search_server.tools.tavily_search import (
     search_documentation,
     web_search_documentation,
 )

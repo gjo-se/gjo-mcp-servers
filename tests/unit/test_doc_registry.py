@@ -8,7 +8,7 @@ import pytest
 
 from servers.doc_server.server import DOC_SOURCES
 from servers.doc_server.tools.doc_registry import DOC_REGISTRY
-from servers.doc_server.tools.web_search import DOCUMENTATION_DOMAINS
+from servers.web_search_server.tools.tavily_search import DOCUMENTATION_DOMAINS
 
 VALID_DOMAIN_RE = re.compile(r"^[a-z0-9][a-z0-9.-]+\.[a-z]{2,}(/.*)?$")
 KNOWN_TOOLS = {

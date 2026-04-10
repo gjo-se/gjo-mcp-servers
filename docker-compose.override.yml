@@ -1,6 +1,6 @@
-# Current default service for local development.
+# Current default services for local development.
 # Together with the `full-stack` profile in `docker-compose.yml`,
-# `docker compose up -d` starts only this service.
+# `docker compose up -d` starts only these services.
 services:
   doc-server:
     build: .
@@ -19,6 +19,33 @@ services:
           "python",
           "-c",
           "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8004/health')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - mcp_internal
+      - mcp_external
+
+  web-search-server:
+    build: .
+    command: ["uv", "run", "python", "-m", "servers.web_search_server.server"]
+    environment:
+      HOST: 0.0.0.0
+      PORT_WEB_SEARCH: ${PORT_WEB_SEARCH}
+      LOG_LEVEL: ${LOG_LEVEL}
+      TAVILY_API_KEY: ${TAVILY_API_KEY}
+    ports:
+      - "${PORT_WEB_SEARCH}:8006"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8006/health')",
         ]
       interval: 10s
       timeout: 5s

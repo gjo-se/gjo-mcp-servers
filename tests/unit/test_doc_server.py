@@ -18,7 +18,7 @@ from servers.doc_server.server import (
     fetch_pydantic_docs,
     mcp,
 )
-from servers.doc_server.tools.web_search import (
+from servers.web_search_server.tools.tavily_search import (
     DOCUMENTATION_DOMAINS,
     web_search_documentation,
 )
@@ -278,7 +278,7 @@ def test_web_search_documentation_returns_results(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """web_search_documentation should forward the query and return Tavily results."""
-    import servers.doc_server.tools.web_search as web_search_module
+    import servers.web_search_server.tools.tavily_search as web_search_module
 
     monkeypatch.setenv("TAVILY_API_KEY", "test-key-dummy")
 
@@ -313,7 +313,7 @@ def test_web_search_documentation_filters_to_configured_domains(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """web_search_documentation must only search within DOCUMENTATION_DOMAINS."""
-    import servers.doc_server.tools.web_search as web_search_module
+    import servers.web_search_server.tools.tavily_search as web_search_module
 
     monkeypatch.setenv("TAVILY_API_KEY", "test-key-dummy")
 
