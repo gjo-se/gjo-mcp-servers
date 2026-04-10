@@ -3,18 +3,30 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 from langchain_tavily import TavilySearch
 
 from shared.config import settings
 
 DOCUMENTATION_DOMAINS = [
+    # bestehend – Backend
     "docs.sqlalchemy.org",
     "alembic.sqlalchemy.org",
     "docs.pytest.org",
     "pytest-asyncio.readthedocs.io",
     "docs.python.org",
+    # neu – Backend
+    "www.python-httpx.org",
+    "playwright.dev",
+    "docs.github.com",
+    # neu – Frontend
+    "react.dev",
+    "typescriptlang.org",
+    "tailwindcss.com",
+    "vitejs.dev",
+    "reactrouter.com",
 ]
 DEFAULT_MAX_RESULTS = 3
 DEFAULT_DESCRIPTION = (
