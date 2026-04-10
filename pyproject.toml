@@ -28,6 +28,7 @@ dev = [
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+addopts = "-m 'not integration'"
 markers = [
     "integration: Integration tests using the full MCP server stack (in-process, no Docker required)",
     "slow: Tests with significant runtime (> 5 s); excluded from fast feedback loops",

@@ -280,6 +280,8 @@ def test_web_search_documentation_returns_results(
     """web_search_documentation should forward the query and return Tavily results."""
     import servers.doc_server.tools.web_search as web_search_module
 
+    monkeypatch.setenv("TAVILY_API_KEY", "test-key-dummy")
+
     def fake_invoke(self: object, payload: dict[str, str]) -> dict[str, object]:
         assert payload["query"] == "SQLAlchemy 2.x async_sessionmaker"
         return {
@@ -312,6 +314,8 @@ def test_web_search_documentation_filters_to_configured_domains(
 ) -> None:
     """web_search_documentation must only search within DOCUMENTATION_DOMAINS."""
     import servers.doc_server.tools.web_search as web_search_module
+
+    monkeypatch.setenv("TAVILY_API_KEY", "test-key-dummy")
 
     captured_domains: list[list[str]] = []
 
