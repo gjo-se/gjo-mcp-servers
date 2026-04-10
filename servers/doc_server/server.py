@@ -35,7 +35,9 @@ FASTAPI_FALLBACK_DESCRIPTION: Final[str] = (
 # Pydantic fallback constants
 # ---------------------------------------------------------------------------
 PYDANTIC_FALLBACK_DOMAINS: Final[tuple[str, ...]] = ("docs.pydantic.dev",)
-PYDANTIC_FALLBACK_QUERY: Final[str] = "Pydantic v2 official documentation latest guidance"
+PYDANTIC_FALLBACK_QUERY: Final[str] = (
+    "Pydantic v2 official documentation latest guidance"
+)
 PYDANTIC_FALLBACK_DESCRIPTION: Final[str] = (
     "Search the official Pydantic documentation when llms.txt is unavailable. "
     "Use only official Pydantic docs results."
@@ -302,7 +304,9 @@ async def fetch_fastapi_docs(query: str = "") -> dict[str, str]:
         if response is None or response.status_code != httpx.codes.NOT_FOUND:
             raise
         result = _search_fastapi_documentation(query)
-        result["fallback_reason"] = f"{response.status_code} at {DOC_SOURCES['fastapi']}"
+        result["fallback_reason"] = (
+            f"{response.status_code} at {DOC_SOURCES['fastapi']}"
+        )
         return result
 
 

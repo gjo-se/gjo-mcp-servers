@@ -24,41 +24,46 @@ KNOWN_TOOLS = {
 def test_all_doc_sources_have_registry_entry() -> None:
     """Every key in DOC_SOURCES must have a matching entry in DOC_REGISTRY."""
     for source_name in DOC_SOURCES:
-        assert source_name in DOC_REGISTRY, (
-            f"DOC_SOURCES[{source_name!r}] has no entry in DOC_REGISTRY"
-        )
+        assert (
+            source_name in DOC_REGISTRY
+        ), f"DOC_SOURCES[{source_name!r}] has no entry in DOC_REGISTRY"
 
 
 def test_llms_txt_entries_reference_known_tool() -> None:
     """Every llms_txt entry must reference a registered MCP tool."""
     for pkg, entry in DOC_REGISTRY.items():
         if entry["type"] == "llms_txt":
-            assert entry["tool"] in KNOWN_TOOLS, (
-                f"DOC_REGISTRY[{pkg!r}] references unknown tool {entry['tool']!r}"
-            )
+            assert (
+                entry["tool"] in KNOWN_TOOLS
+            ), f"DOC_REGISTRY[{pkg!r}] references unknown tool {entry['tool']!r}"
 
 
 def test_web_search_entries_have_valid_domain_format() -> None:
-    """Every web_search domain must be a non-empty, whitespace-free, valid-looking domain."""
+    """Every web_search domain must be non-empty, whitespace-free, and valid-looking."""
     for pkg, entry in DOC_REGISTRY.items():
         if entry["type"] == "web_search":
             domain = entry["domain"]
             assert domain, f"DOC_REGISTRY[{pkg!r}] has empty domain"
-            assert " " not in domain, f"DOC_REGISTRY[{pkg!r}] domain contains whitespace"
-            assert "." in domain, f"DOC_REGISTRY[{pkg!r}] domain missing dot: {domain!r}"
+            assert (
+                " " not in domain
+            ), f"DOC_REGISTRY[{pkg!r}] domain contains whitespace"
+            assert (
+                "." in domain
+            ), f"DOC_REGISTRY[{pkg!r}] domain missing dot: {domain!r}"
 
 
 def test_all_web_search_domains_in_documentation_domains() -> None:
-    """Every web_search domain in DOC_REGISTRY must be listed in DOCUMENTATION_DOMAINS."""
+    """Every web_search domain in DOC_REGISTRY must be listed
+    in DOCUMENTATION_DOMAINS."""
     registry_domains = {
         entry["domain"]
         for entry in DOC_REGISTRY.values()
         if entry["type"] == "web_search"
     }
     for domain in registry_domains:
-        assert domain in DOCUMENTATION_DOMAINS, (
-            f"DOC_REGISTRY domain {domain!r} missing from DOCUMENTATION_DOMAINS"
-        )
+        assert (
+            domain in DOCUMENTATION_DOMAINS
+        ), f"DOC_REGISTRY domain {domain!r} missing from DOCUMENTATION_DOMAINS"
 
 
 def test_package_names_are_normalized() -> None:
