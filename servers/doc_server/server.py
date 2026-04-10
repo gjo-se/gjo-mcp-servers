@@ -2,20 +2,30 @@
 
 from __future__ import annotations
 
+import json
 from contextlib import asynccontextmanager
-from typing import Final
+from typing import Any, Final
 
 import httpx
 from fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
-from servers.doc_server.tools.web_search import web_search_documentation
+from servers.doc_server.tools.web_search import (
+    search_documentation,
+    web_search_documentation,
+)
 from shared.config import settings
 from shared.logging import configure_logging, get_logger
 
 SERVER_NAME: Final[str] = "doc-server"
 MCP_PATH: Final[str] = "/mcp"
+FASTAPI_FALLBACK_DOMAINS: Final[tuple[str, ...]] = ("fastapi.tiangolo.com",)
+FASTAPI_FALLBACK_QUERY: Final[str] = "FastAPI official documentation latest guidance"
+FASTAPI_FALLBACK_DESCRIPTION: Final[str] = (
+    "Search the official FastAPI documentation when llms.txt is unavailable. "
+    "Use only official FastAPI docs results."
+)
 DOC_SOURCES: Final[dict[str, str]] = {
     "fastapi": "https://fastapi.tiangolo.com/llms.txt",
     "pydantic": "https://docs.pydantic.dev/llms.txt",
@@ -66,12 +76,91 @@ async def _fetch_documentation(source_name: str, query: str = "") -> dict[str, s
     }
 
 
-async def fetch_fastapi_docs(query: str = "") -> dict[str, str]:
-    """Fetch current FastAPI docs via llms.txt.
+def _format_search_results(search_payload: dict[str, Any] | str) -> str:
+    """Convert Tavily results into a deterministic text excerpt."""
+    if isinstance(search_payload, str):
+        normalized_payload = search_payload.strip()
+        if not normalized_payload:
+            raise ValueError("FastAPI documentation fallback returned no usable results")
 
-    MUST be used for FastAPI questions because training data may be outdated.
+        try:
+            parsed_payload = json.loads(normalized_payload)
+        except json.JSONDecodeError:
+            return normalized_payload
+
+        if not isinstance(parsed_payload, dict):
+            return normalized_payload
+
+        search_payload = parsed_payload
+
+    sections: list[str] = []
+
+    answer = str(search_payload.get("answer") or "").strip()
+    if answer:
+        sections.append(f"Answer: {answer}")
+
+    raw_results = search_payload.get("results") or []
+    for result in raw_results:
+        if not isinstance(result, dict):
+            continue
+
+        title = str(result.get("title") or "").strip()
+        url = str(result.get("url") or "").strip()
+        content = str(result.get("content") or "").strip()
+        block_lines = [
+            line
+            for line in (
+                f"Title: {title}" if title else "",
+                f"URL: {url}" if url else "",
+                content,
+            )
+            if line
+        ]
+        if block_lines:
+            sections.append("\n".join(block_lines))
+
+    if not sections:
+        raise ValueError("FastAPI documentation fallback returned no usable results")
+
+    return "\n\n".join(sections)
+
+
+def _search_fastapi_documentation(query: str) -> dict[str, str]:
+    """Search official FastAPI docs when the llms.txt source is unavailable."""
+    search_query = query.strip() or FASTAPI_FALLBACK_QUERY
+    search_payload = search_documentation(
+        search_query,
+        include_domains=FASTAPI_FALLBACK_DOMAINS,
+        max_results=3,
+        include_answer=True,
+        description=FASTAPI_FALLBACK_DESCRIPTION,
+    )
+    return {
+        "source": "fastapi",
+        "url": DOC_SOURCES["fastapi"],
+        "content": _format_search_results(search_payload),
+        "query": query,
+        "resolved_via": "official_search_fallback",
+        "fallback_url": "https://fastapi.tiangolo.com/",
+    }
+
+
+async def fetch_fastapi_docs(query: str = "") -> dict[str, str]:
+    """Fetch current FastAPI docs from official sources.
+
+    The server prefers llms.txt, but falls back to an official-domain search when the
+    llms.txt endpoint is unavailable.
     """
-    return await _fetch_documentation("fastapi", query)
+    try:
+        return await _fetch_documentation("fastapi", query)
+    except httpx.HTTPStatusError as exc:
+        response = exc.response
+        if response is None or response.status_code != httpx.codes.NOT_FOUND:
+            raise
+
+        result = _search_fastapi_documentation(query)
+        result["fallback_reason"] = f"{response.status_code} at {DOC_SOURCES['fastapi']}"
+        return result
 
 
 async def fetch_pydantic_docs(query: str = "") -> dict[str, str]:
@@ -110,8 +199,9 @@ mcp.tool(
     fetch_fastapi_docs,
     name="fetch_fastapi_docs",
     description=(
-        "Fetch current FastAPI documentation from llms.txt. MUST be used for FastAPI "
-        "questions because training data may be outdated."
+        "Fetch current FastAPI documentation from official sources. Prefer llms.txt "
+        "and fall back to official FastAPI documentation search when needed. MUST be "
+        "used for FastAPI questions because training data may be outdated."
     ),
 )
 mcp.tool(

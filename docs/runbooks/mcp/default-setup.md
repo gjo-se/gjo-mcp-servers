@@ -134,9 +134,14 @@ uv sync
 
 ### 2. Lokale Umgebung anlegen
 
+Einmalig nach dem Klonen oder nur falls `.env` noch nicht existiert:
+
 ```zsh
 cp .env.example .env
 ```
+
+Diesen Schritt nicht bei jedem Start wiederholen, damit lokale Werte in `.env`
+nicht versehentlich überschrieben werden.
 
 ### 3. Default-Setup starten
 

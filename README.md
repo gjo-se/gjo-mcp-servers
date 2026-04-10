@@ -44,10 +44,15 @@ Sie enthält im aktuellen Default **nur** `doc-server`.
 
 ## Setup
 
+Einmalig nach dem Klonen oder nur falls `.env` noch fehlt:
+
 ```zsh
 uv sync
 cp .env.example .env
 ```
+
+Für normale Starts sollte `.env` **nicht** jedes Mal neu aus `.env.example` kopiert werden,
+damit lokale Anpassungen nicht überschrieben werden.
 
 ### Wichtige Variablen im aktuellen Default
 
