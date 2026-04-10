@@ -7,15 +7,15 @@ changing the tool contract.
 
 Note:
     ``DOCUMENTATION_DOMAINS`` contains the default allow-list used by
-    ``web_search_documentation``. Callers that need a custom domain list should
-    use ``search_documentation`` directly and pass ``include_domains`` explicitly.
+    ``web_search_documentation``. Pass ``NO_DOMAIN_FILTER`` (empty list) to
+    ``build_tavily_search_tool`` to run an unrestricted global search.
 """
 
 from __future__ import annotations
 
 import os
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, Literal
 
 from langchain_tavily import TavilySearch
 
@@ -41,9 +41,19 @@ DOCUMENTATION_DOMAINS: list[str] = [
 ]
 
 DEFAULT_MAX_RESULTS: int = 3
+
+# Sentinel: pass to build_tavily_search_tool to disable domain filtering.
+NO_DOMAIN_FILTER: list[str] = []
+
 DEFAULT_DESCRIPTION: str = (
     "Search official documentation sources for SQLAlchemy, Alembic, pytest and "
     "related tooling. Use this when no llms.txt source is available."
+)
+
+GENERIC_DESCRIPTION: str = (
+    "Generic web search without domain restrictions. "
+    "Use for general research, news, blog posts, and topics "
+    "not covered by official documentation."
 )
 
 
@@ -67,39 +77,51 @@ def build_tavily_search_tool(
     max_results: int = DEFAULT_MAX_RESULTS,
     include_answer: bool = False,
     description: str = DEFAULT_DESCRIPTION,
+    search_depth: Literal["basic", "advanced"] = "basic",
+    topic: Literal["general", "news", "finance"] = "general",
 ) -> TavilySearch:
-    """Build a Tavily search tool restricted to the provided domain allow-list.
+    """Build a configured Tavily search tool.
+
+    Domain filter behaviour:
+
+    * ``None`` (default) → restrict to ``DOCUMENTATION_DOMAINS``
+    * ``[]`` / ``NO_DOMAIN_FILTER`` → no domain filter (global search)
+    * non-empty list → restrict to the provided domains
 
     Args:
-        include_domains: Domains to restrict results to. Defaults to
-            ``DOCUMENTATION_DOMAINS`` when *None*.
+        include_domains: Domain allow-list.  See above for sentinel semantics.
         max_results: Maximum number of search results to return.
         include_answer: Whether to request a synthesised answer from Tavily.
         description: Human-readable description forwarded to the LangChain tool.
+        search_depth: ``"basic"`` for speed, ``"advanced"`` for depth.
+        topic: Tavily topic context – ``"general"``, ``"news"`` or ``"finance"``.
 
     Returns:
         Configured :class:`TavilySearch` instance.
 
     Raises:
-        ValueError: When *max_results* is not positive or *include_domains* is empty.
+        ValueError: When *max_results* is not positive.
     """
     if max_results <= 0:
         raise ValueError("max_results must be greater than 0")
 
-    if include_domains is not None and len(include_domains) == 0:
-        raise ValueError("include_domains must not be empty")
-
-    resolved = include_domains if include_domains is not None else DOCUMENTATION_DOMAINS
-    domains = list(resolved)
+    if include_domains is None:
+        # Default: restrict to documentation domains
+        domains: list[str] | None = DOCUMENTATION_DOMAINS
+    elif len(include_domains) == 0:
+        # Sentinel NO_DOMAIN_FILTER: no restriction
+        domains = None
+    else:
+        domains = list(include_domains)
 
     os.environ.setdefault("TAVILY_API_KEY", _resolve_tavily_api_key())
     return TavilySearch(
         max_results=max_results,
-        search_depth="basic",
+        search_depth=search_depth,
         include_domains=domains,
         include_answer=include_answer,
         include_raw_content=False,
-        topic="general",
+        topic=topic,
         description=description,
     )
 
@@ -192,3 +214,46 @@ def web_search_documentation(
         include_answer=False,
         description=DEFAULT_DESCRIPTION,
     )
+
+
+def web_search(
+    query: str,
+    max_results: int = DEFAULT_MAX_RESULTS,
+    search_depth: Literal["basic", "advanced"] = "basic",
+    topic: Literal["general", "news", "finance"] = "general",
+) -> dict[str, Any]:
+    """Run an unrestricted Tavily web search for general research.
+
+    Unlike ``web_search_documentation`` this tool applies no domain filter,
+    making it suitable for news, blog posts, and topics not covered by
+    official documentation sources.
+
+    Args:
+        query: Search query string.
+        max_results: Maximum number of results to return.
+        search_depth: ``"basic"`` for fast results, ``"advanced"`` for deeper
+            analysis.
+        topic: Search topic context – ``"general"``, ``"news"`` or
+            ``"finance"``.
+
+    Returns:
+        Tavily response payload as a dict.
+
+    Raises:
+        ValueError: When *query* is blank or *max_results* is not positive.
+    """
+    if not query.strip():
+        raise ValueError("query must not be empty")
+    if max_results <= 0:
+        raise ValueError("max_results must be greater than 0")
+
+    tavily_tool = build_tavily_search_tool(
+        include_domains=NO_DOMAIN_FILTER,
+        max_results=max_results,
+        include_answer=False,
+        description=GENERIC_DESCRIPTION,
+        search_depth=search_depth,
+        topic=topic,
+    )
+    raw = tavily_tool.invoke({"query": query})
+    return _normalize_tavily_response(raw, query)
