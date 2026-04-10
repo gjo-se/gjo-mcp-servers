@@ -21,7 +21,10 @@ from fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
-from servers.web_search_server.tools.tavily_search import web_search_documentation
+from servers.web_search_server.tools.tavily_search import (
+    web_search,
+    web_search_documentation,
+)
 from shared.config import settings
 from shared.logging import configure_logging, get_logger
 
@@ -51,8 +54,9 @@ async def web_search_lifespan(_: FastMCP):
 mcp = FastMCP(
     name=SERVER_NAME,
     instructions=(
-        "Generic web search server. Use web_search_documentation to query "
-        "official documentation sources when no llms.txt feed is available."
+        "Generic web search server. "
+        "Use web_search_documentation for official documentation sources. "
+        "Use web_search for unrestricted general research."
     ),
     lifespan=web_search_lifespan,
 )
@@ -63,6 +67,16 @@ mcp.tool(
     description=(
         "Search official documentation domains via Tavily for SQLAlchemy, Alembic, "
         "pytest and related tooling when no llms.txt source exists."
+    ),
+)
+
+mcp.tool(
+    web_search,
+    name="web_search",
+    description=(
+        "Generic web search without domain restrictions. "
+        "Use for general research, news, blog posts, and topics "
+        "not covered by official documentation."
     ),
 )
 
