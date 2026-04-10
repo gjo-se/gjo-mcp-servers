@@ -26,6 +26,15 @@ FASTAPI_FALLBACK_DESCRIPTION: Final[str] = (
     "Search the official FastAPI documentation when llms.txt is unavailable. "
     "Use only official FastAPI docs results."
 )
+PYDANTIC_FALLBACK_DOMAINS: Final[tuple[str, ...]] = (
+    "docs.pydantic.dev",
+    "pydantic.dev",
+)
+PYDANTIC_FALLBACK_QUERY: Final[str] = "Pydantic v2 official documentation latest guidance"
+PYDANTIC_FALLBACK_DESCRIPTION: Final[str] = (
+    "Search the official Pydantic documentation when llms.txt is unavailable. "
+    "Use only official Pydantic docs results."
+)
 DOC_SOURCES: Final[dict[str, str]] = {
     "fastapi": "https://fastapi.tiangolo.com/llms.txt",
     "pydantic": "https://docs.pydantic.dev/llms.txt",
@@ -48,7 +57,7 @@ async def doc_lifespan(_: FastMCP):
 
 async def _fetch_llms_txt_content(url: str) -> str:
     """Fetch llms.txt content from the configured documentation URL."""
-    async with httpx.AsyncClient(timeout=20.0) as client:
+    async with httpx.AsyncClient(timeout=20.0, follow_redirects=True) as client:
         response = await client.get(url)
         response.raise_for_status()
     return response.text
@@ -145,6 +154,26 @@ def _search_fastapi_documentation(query: str) -> dict[str, str]:
     }
 
 
+def _search_pydantic_documentation(query: str) -> dict[str, str]:
+    """Search official Pydantic docs when the llms.txt source is unavailable."""
+    search_query = query.strip() or PYDANTIC_FALLBACK_QUERY
+    search_payload = search_documentation(
+        search_query,
+        include_domains=PYDANTIC_FALLBACK_DOMAINS,
+        max_results=3,
+        include_answer=True,
+        description=PYDANTIC_FALLBACK_DESCRIPTION,
+    )
+    return {
+        "source": "pydantic",
+        "url": DOC_SOURCES["pydantic"],
+        "content": _format_search_results(search_payload),
+        "query": query,
+        "resolved_via": "official_search_fallback",
+        "fallback_url": "https://docs.pydantic.dev/",
+    }
+
+
 async def fetch_fastapi_docs(query: str = "") -> dict[str, str]:
     """Fetch current FastAPI docs from official sources.
 
@@ -164,11 +193,26 @@ async def fetch_fastapi_docs(query: str = "") -> dict[str, str]:
 
 
 async def fetch_pydantic_docs(query: str = "") -> dict[str, str]:
-    """Fetch current Pydantic docs via llms.txt.
+    """Fetch current Pydantic docs via llms.txt with Tavily fallback.
 
     MUST be used for Pydantic questions because training data may be outdated.
+    Falls back to an official-domain Tavily search when llms.txt is unavailable.
     """
-    return await _fetch_documentation("pydantic", query)
+    try:
+        return await _fetch_documentation("pydantic", query)
+    except (httpx.HTTPStatusError, httpx.HTTPError) as exc:
+        status_code: int | None = None
+        if isinstance(exc, httpx.HTTPStatusError):
+            status_code = exc.response.status_code if exc.response is not None else None
+
+        result = _search_pydantic_documentation(query)
+        reason = (
+            f"{status_code} at {DOC_SOURCES['pydantic']}"
+            if status_code is not None
+            else f"HTTP error at {DOC_SOURCES['pydantic']}: {exc}"
+        )
+        result["fallback_reason"] = reason
+        return result
 
 
 async def fetch_langchain_docs(query: str = "") -> dict[str, str]:
