@@ -1,7 +1,7 @@
 # Default-Setup für `gjo-mcp-servers`
 
 > Kanonische Referenz für den **aktuellen** lokalen Standardpfad.
-> Stand heute: Der Default ist **`doc_server` / `mcpdoc`**.
+> Stand heute: Der Default sind **`doc_server`** (8004) und **`web_search_server`** (8006).
 
 ---
 
@@ -18,12 +18,12 @@ Dieses Runbook beantwortet für den aktuellen Projektstand genau vier Fragen:
 
 ## Entscheidung
 
-Der aktuelle kanonische Default von `gjo-mcp-servers` ist:
+Der aktuelle kanonische Default von `gjo-mcp-servers` sind:
 
-- **Service:** `doc_server`
-- **Zweck:** `mcpdoc` / aktuelle Dokumentationsquellen
-- **Transportziel:** `http://localhost:8004/mcp`
-- **Kanonische Client-Konfiguration:** `.mcp.json` enthält aktuell nur `doc-server`
+- **Service:** `doc_server` + `web_search_server`
+- **Zweck:** aktuelle Dokumentationsquellen + generische Web-Suche
+- **Transportziele:** `http://localhost:8004/mcp` · `http://localhost:8006/mcp`
+- **Kanonische Client-Konfiguration:** `.mcp.json` enthält `doc-server` und `web-search-server`
 
 Nicht Teil des heutigen Default-Setups:
 
@@ -40,11 +40,11 @@ Diese Dienste bleiben vorhanden, sind aber aktuell **opt-in** über das Compose-
 
 Für den aktuellen Projektstand gelten bewusst diese Entscheidungen:
 
-1. `doc-server` bleibt in `docker-compose.override.yml`.
-2. Der lokale Standardbefehl bleibt trotzdem `docker compose up -d`, weil das Override lokal automatisch geladen wird.
-3. PostgreSQL ist für den heutigen `mcpdoc`-Default nicht nötig.
-4. Pflichtvariablen sind `PORT_DOC` und `LOG_LEVEL`.
-5. `TAVILY_API_KEY` ist nur für den Fallback `web_search_documentation` optional relevant.
+1. `doc-server` und `web-search-server` liegen in `docker-compose.override.yml`.
+2. Der lokale Standardbefehl bleibt `docker compose up -d`.
+3. PostgreSQL ist für den heutigen Default nicht nötig.
+4. Pflichtfelder: `PORT_DOC`, `PORT_WEB_SEARCH` und `LOG_LEVEL`.
+5. `TAVILY_API_KEY` ist für `web_search_documentation` und `web_search` erforderlich.
 6. Alle weiteren MCP-Server gehören aktuell nicht zum kanonischen Default.
 
 ---
@@ -71,9 +71,10 @@ Permanente Referenz für den Setup-Zustand:
 Die Datei `.mcp.json` im Repo-Root ist die aktuelle Quelle der Wahrheit für den
 MCP-Client-Default.
 
-Im heutigen Stand enthält sie bewusst nur:
+Im heutigen Stand enthält sie:
 
 - `doc-server` → `http://localhost:8004/mcp`
+- `web-search-server` → `http://localhost:8006/mcp`
 
 Nicht Teil der kanonischen Default-Konfiguration:
 
@@ -93,23 +94,22 @@ gehören aber aktuell **nicht** zum Standard.
 
 ```dotenv
 PORT_DOC=8004
+PORT_WEB_SEARCH=8006
 LOG_LEVEL=INFO
 ```
 
-### Optional für den Defaultpfad
+### Pflicht für Web-Search-Tools
 
 ```dotenv
-TAVILY_API_KEY=
+TAVILY_API_KEY=<key>
 ```
 
-`TAVILY_API_KEY` ist nur nötig, wenn im `doc_server` der Tavily-basierte Fallback
-`web_search_documentation` genutzt werden soll.
-
-Die `llms.txt`-basierten Doku-Tools funktionieren auch ohne Tavily-Key.
+`TAVILY_API_KEY` ist erforderlich für `web_search_documentation` und `web_search`.
+Die `llms.txt`-basierten Doku-Tools (`fetch_*_docs`) funktionieren auch ohne Key.
 
 ### Nicht nötig für den aktuellen Defaultpfad
 
-Diese Variablen sind aktuell **nicht** nötig, solange nur `doc_server` als Default läuft:
+Diese Variablen sind aktuell **nicht** nötig, solange nur der Default-Stack (`doc_server` + `web_search_server`) läuft:
 
 ```dotenv
 PORT_SCRAPER=8001
@@ -151,9 +151,9 @@ docker compose up -d
 
 Warum genügt das?
 
-- `doc_server` liegt in `docker-compose.override.yml`
+- `doc_server` und `web_search_server` liegen in `docker-compose.override.yml`
 - zusätzliche Services in `docker-compose.yml` laufen nur mit Profil `full-stack`
-- dadurch startet der Standardpfad nur den aktuellen `doc_server`
+- dadurch startet der Standardpfad genau diese beiden Server
 
 ---
 
@@ -169,12 +169,14 @@ docker compose ps
 
 ```zsh
 curl -fsS http://localhost:8004/health
+curl -fsS http://localhost:8006/health
 ```
 
-Erwartete Antwort:
+Erwartete Antworten:
 
 ```json
 {"status":"ok","server":"doc-server"}
+{"status":"ok","server":"web-search-server"}
 ```
 
 ### MCP-Ziel prüfen
@@ -183,8 +185,8 @@ Erwartete Antwort:
 cat .mcp.json
 ```
 
-Für den aktuellen Defaultpfad muss `doc-server` als MCP-Endpunkt enthalten sein,
-und es sollen keine weiteren Server in der kanonischen Datei stehen.
+Für den aktuellen Defaultpfad müssen `doc-server` und `web-search-server` als
+MCP-Endpunkte enthalten sein.
 
 ---
 
@@ -194,12 +196,13 @@ und es sollen keine weiteren Server in der kanonischen Datei stehen.
 
 ```zsh
 docker compose logs -f doc-server
+docker compose logs -f web-search-server
 ```
 
 ### Stoppen
 
 ```zsh
-docker compose stop doc-server
+docker compose stop
 ```
 
 ### Komplett herunterfahren
