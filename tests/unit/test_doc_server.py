@@ -11,8 +11,10 @@ from servers.doc_server.server import (
     DOC_SOURCES,
     app,
     fetch_fastapi_docs,
+    fetch_fastmcp_docs,
     fetch_langchain_docs,
     fetch_langgraph_docs,
+    fetch_pycharm_docs,
     fetch_pydantic_docs,
     mcp,
 )
@@ -390,18 +392,218 @@ async def test_fetch_langgraph_docs_returns_full_content_without_query(
     assert result["source"] == "langgraph"
     assert result["content"] == "LangGraph full docs content"
 
+# ---------------------------------------------------------------------------
+# T-20a: Tests for fetch_fastmcp_docs
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_fetch_fastmcp_docs_uses_configured_source(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The FastMCP docs tool should use the configured llms.txt source."""
 
+    async def fake_fetch(url: str) -> str:
+        assert url == DOC_SOURCES["fastmcp"]
+        return "FastMCP current docs\ntool decorator anchor"
+
+    monkeypatch.setattr(doc_server_module, "_fetch_llms_txt_content", fake_fetch)
+
+    result = await fetch_fastmcp_docs("tool decorator")
+
+    assert result["source"] == "fastmcp"
+    assert result["url"] == DOC_SOURCES["fastmcp"]
+    assert result["content"] == "tool decorator anchor"
+
+
+@pytest.mark.asyncio
+async def test_fetch_fastmcp_docs_falls_back_on_http_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The FastMCP docs tool should fall back to Tavily on HTTP errors."""
+
+    async def fake_fetch(url: str) -> str:
+        request = httpx.Request("GET", url)
+        response = httpx.Response(status_code=503, request=request)
+        raise httpx.HTTPStatusError("Service Unavailable", request=request, response=response)
+
+    def fake_search(
+        query: str,
+        *,
+        include_domains: tuple[str, ...],
+        max_results: int,
+        include_answer: bool,
+        description: str,
+    ) -> dict[str, object]:
+        assert "gofastmcp.com" in include_domains
+        return {
+            "answer": "FastMCP is a Python framework for building MCP servers.",
+            "results": [
+                {
+                    "title": "FastMCP – Tool Decorator",
+                    "url": "https://gofastmcp.com/tools",
+                    "content": "Use @mcp.tool() to register a tool.",
+                }
+            ],
+        }
+
+    monkeypatch.setattr(doc_server_module, "_fetch_llms_txt_content", fake_fetch)
+    monkeypatch.setattr(doc_server_module, "search_documentation", fake_search)
+
+    result = await fetch_fastmcp_docs("tool decorator")
+
+    assert result["source"] == "fastmcp"
+    assert result["resolved_via"] == "official_search_fallback"
+    assert "FastMCP" in result["content"]
+
+
+@pytest.mark.asyncio
+async def test_fetch_pycharm_docs_falls_back_when_html_returned(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The PyCharm docs tool should fall back to Tavily when llms.txt returns HTML.
+
+    JetBrains redirects https://www.jetbrains.com/help/pycharm/llms.txt to an
+    HTML getting-started page (HTTP 200). The tool must detect the HTML response
+    and trigger the Tavily fallback instead of returning raw HTML as content.
+    """
+
+    async def fake_fetch(url: str) -> str:
+        return (
+            '<!DOCTYPE html SYSTEM "about:legacy-compat">'
+            "<html lang='en-US'><head><title>Getting started | PyCharm</title></head>"
+            "<body>...</body></html>"
+        )
+
+    def fake_search(
+        query: str,
+        *,
+        include_domains: tuple[str, ...],
+        max_results: int,
+        include_answer: bool,
+        description: str,
+    ) -> dict[str, object]:
+        assert "www.jetbrains.com" in include_domains
+        return {
+            "answer": "Run configurations define how PyCharm launches your project.",
+            "results": [
+                {
+                    "title": "Run/Debug Configurations – PyCharm",
+                    "url": "https://www.jetbrains.com/help/pycharm/run-debug-configuration.html",
+                    "content": "Create a run configuration to execute your code.",
+                }
+            ],
+        }
+
+    monkeypatch.setattr(doc_server_module, "_fetch_llms_txt_content", fake_fetch)
+    monkeypatch.setattr(doc_server_module, "search_documentation", fake_search)
+
+    result = await fetch_pycharm_docs("run configuration")
+
+    assert result["source"] == "pycharm"
+    assert result["resolved_via"] == "official_search_fallback"
+    assert "llms.txt returned HTML" in result["fallback_reason"]
+    assert "PyCharm" in result["content"]
+    assert "<!DOCTYPE" not in result["content"]
+
+
+# ---------------------------------------------------------------------------
+# T-20a: Tests for fetch_pycharm_docs
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_fetch_pycharm_docs_uses_configured_source(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The PyCharm docs tool should use the configured llms.txt source."""
+
+    async def fake_fetch(url: str) -> str:
+        assert url == DOC_SOURCES["pycharm"]
+        return "PyCharm current docs\nrun configuration anchor"
+
+    monkeypatch.setattr(doc_server_module, "_fetch_llms_txt_content", fake_fetch)
+
+    result = await fetch_pycharm_docs("run configuration")
+
+    assert result["source"] == "pycharm"
+    assert result["url"] == DOC_SOURCES["pycharm"]
+    assert result["content"] == "run configuration anchor"
+
+
+@pytest.mark.asyncio
+async def test_fetch_pycharm_docs_falls_back_on_http_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The PyCharm docs tool should fall back to Tavily on HTTP errors."""
+
+    async def fake_fetch(url: str) -> str:
+        request = httpx.Request("GET", url)
+        response = httpx.Response(status_code=503, request=request)
+        raise httpx.HTTPStatusError("Service Unavailable", request=request, response=response)
+
+    def fake_search(
+        query: str,
+        *,
+        include_domains: tuple[str, ...],
+        max_results: int,
+        include_answer: bool,
+        description: str,
+    ) -> dict[str, object]:
+        assert "www.jetbrains.com" in include_domains
+        return {
+            "answer": "Run configurations define how PyCharm launches your project.",
+            "results": [
+                {
+                    "title": "Run/Debug Configurations – PyCharm",
+                    "url": "https://www.jetbrains.com/help/pycharm/run-debug-configuration.html",
+                    "content": "Create a run configuration to execute your code.",
+                }
+            ],
+        }
+
+    monkeypatch.setattr(doc_server_module, "_fetch_llms_txt_content", fake_fetch)
+    monkeypatch.setattr(doc_server_module, "search_documentation", fake_search)
+
+    result = await fetch_pycharm_docs("run configuration")
+
+    assert result["source"] == "pycharm"
+    assert result["resolved_via"] == "official_search_fallback"
+    assert "PyCharm" in result["content"]
+
+
+# ---------------------------------------------------------------------------
+# T-20a: Updated configuration completeness test
+# ---------------------------------------------------------------------------
 def test_documentation_source_configuration_is_complete() -> None:
-    assert DOC_SOURCES == {
-        "fastapi": "https://fastapi.tiangolo.com/llms.txt",
-        "pydantic": "https://docs.pydantic.dev/llms.txt",
-        "langchain": "https://docs.langchain.com/llms.txt",
-        "langgraph": "https://langchain-ai.github.io/langgraph/llms.txt",
+    """DOC_SOURCES and DOCUMENTATION_DOMAINS must contain all expected entries."""
+    assert set(DOC_SOURCES.keys()) == {
+        "fastapi", "pydantic", "langchain", "langgraph",
+        "fastmcp", "pycharm",
     }
-    assert DOCUMENTATION_DOMAINS == [
-        "docs.sqlalchemy.org",
-        "alembic.sqlalchemy.org",
-        "docs.pytest.org",
-        "pytest-asyncio.readthedocs.io",
-        "docs.python.org",
-    ]
+    assert "www.python-httpx.org" in DOCUMENTATION_DOMAINS
+    assert "playwright.dev" in DOCUMENTATION_DOMAINS
+    assert "docs.github.com" in DOCUMENTATION_DOMAINS
+    assert "react.dev" in DOCUMENTATION_DOMAINS
+    assert "typescriptlang.org" in DOCUMENTATION_DOMAINS
+    assert "tailwindcss.com" in DOCUMENTATION_DOMAINS
+    assert "vitejs.dev" in DOCUMENTATION_DOMAINS
+    assert "reactrouter.com" in DOCUMENTATION_DOMAINS
+
+
+# ---------------------------------------------------------------------------
+# T-20a: Integration probes (real HTTP – skipped in normal CI)
+# ---------------------------------------------------------------------------
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.parametrize("tool_fn,query,expected_keyword", [
+    (fetch_fastmcp_docs, "tool decorator", "fastmcp"),
+    (fetch_pycharm_docs, "run configuration", "jetbrains"),
+])
+async def test_fetch_docs_live_probe(tool_fn, query, expected_keyword) -> None:
+    """Live HTTP probe – verifies reachability and content of new llms.txt sources.
+
+    Skipped in normal CI. Run manually or in nightly:
+        uv run pytest tests/unit/ -v -m integration
+    """
+    result = await tool_fn(query=query)
+    assert result.get("content"), f"Empty response from {tool_fn.__name__}"
+    assert expected_keyword.lower() in result["content"].lower(), (
+        f"Expected keyword {expected_keyword!r} not found in {tool_fn.__name__} response"
+    )
