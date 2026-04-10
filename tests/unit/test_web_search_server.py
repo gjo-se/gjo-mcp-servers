@@ -12,7 +12,6 @@ from servers.web_search_server.tools.tavily_search import (
     web_search_documentation,
 )
 
-
 # ---------------------------------------------------------------------------
 # Health endpoint
 # ---------------------------------------------------------------------------
@@ -155,4 +154,3 @@ def test_documentation_domains_contains_all_expected_entries() -> None:
         "reactrouter.com",
     }
     assert expected.issubset(set(DOCUMENTATION_DOMAINS))
-

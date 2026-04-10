@@ -54,8 +54,7 @@ def _resolve_tavily_api_key() -> str:
         ValueError: When no API key is available in settings or environment.
     """
     api_key = (
-        settings.tavily_api_key.strip()
-        or os.environ.get("TAVILY_API_KEY", "").strip()
+        settings.tavily_api_key.strip() or os.environ.get("TAVILY_API_KEY", "").strip()
     )
     if not api_key:
         raise ValueError("TAVILY_API_KEY is required for web search")
@@ -90,7 +89,8 @@ def build_tavily_search_tool(
     if include_domains is not None and len(include_domains) == 0:
         raise ValueError("include_domains must not be empty")
 
-    domains = list(include_domains if include_domains is not None else DOCUMENTATION_DOMAINS)
+    resolved = include_domains if include_domains is not None else DOCUMENTATION_DOMAINS
+    domains = list(resolved)
 
     os.environ.setdefault("TAVILY_API_KEY", _resolve_tavily_api_key())
     return TavilySearch(
@@ -192,5 +192,3 @@ def web_search_documentation(
         include_answer=False,
         description=DEFAULT_DESCRIPTION,
     )
-
-
