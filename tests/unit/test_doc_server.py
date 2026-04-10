@@ -16,7 +16,10 @@ from servers.doc_server.server import (
     fetch_pydantic_docs,
     mcp,
 )
-from servers.doc_server.tools.web_search import DOCUMENTATION_DOMAINS
+from servers.doc_server.tools.web_search import (
+    DOCUMENTATION_DOMAINS,
+    web_search_documentation,
+)
 
 
 @pytest.mark.asyncio
@@ -250,6 +253,70 @@ async def test_tavily_fallback_tool_is_registered() -> None:
     tool = await mcp.get_tool("web_search_documentation")
 
     assert tool is not None
+
+
+def test_web_search_documentation_returns_results(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """web_search_documentation should forward the query and return Tavily results."""
+    import servers.doc_server.tools.web_search as web_search_module
+
+    def fake_invoke(self: object, payload: dict[str, str]) -> dict[str, object]:
+        assert payload["query"] == "SQLAlchemy 2.x async_sessionmaker"
+        return {
+            "results": [
+                {
+                    "title": "Asynchronous I/O — SQLAlchemy 2.1 Documentation",
+                    "url": "https://docs.sqlalchemy.org/en/latest/orm/extensions/asyncio.html",
+                    "content": "Use async_sessionmaker to create async sessions.",
+                }
+            ]
+        }
+
+    monkeypatch.setattr(
+        web_search_module.TavilySearch,
+        "invoke",
+        fake_invoke,
+    )
+
+    result = web_search_documentation("SQLAlchemy 2.x async_sessionmaker")
+
+    assert "results" in result
+    assert result["results"][0]["title"] == "Asynchronous I/O — SQLAlchemy 2.1 Documentation"
+
+
+def test_web_search_documentation_filters_to_configured_domains(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """web_search_documentation must only search within DOCUMENTATION_DOMAINS."""
+    import servers.doc_server.tools.web_search as web_search_module
+
+    captured_domains: list[list[str]] = []
+
+    original_build = web_search_module.build_tavily_search_tool
+
+    def fake_build(**kwargs: object) -> object:
+        captured_domains.append(list(kwargs.get("include_domains", [])))
+        return original_build(**kwargs)
+
+    def fake_invoke(self: object, payload: dict[str, str]) -> dict[str, object]:
+        return {"results": []}
+
+    monkeypatch.setattr(web_search_module, "build_tavily_search_tool", fake_build)
+    monkeypatch.setattr(web_search_module.TavilySearch, "invoke", fake_invoke)
+
+    web_search_documentation("Alembic 1.x autogenerate async")
+
+    assert len(captured_domains) == 1
+    assert captured_domains[0] == DOCUMENTATION_DOMAINS
+
+
+def test_web_search_documentation_raises_on_empty_query() -> None:
+    """web_search_documentation should raise ValueError for blank queries."""
+    import pytest as _pytest
+
+    with _pytest.raises(ValueError, match="query must not be empty"):
+        web_search_documentation("   ")
 
 
 @pytest.mark.asyncio
