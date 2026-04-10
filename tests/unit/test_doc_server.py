@@ -12,6 +12,7 @@ from servers.doc_server.server import (
     app,
     fetch_fastapi_docs,
     fetch_langchain_docs,
+    fetch_langgraph_docs,
     fetch_pydantic_docs,
     mcp,
 )
@@ -287,8 +288,43 @@ async def test_fetch_langchain_docs_returns_full_content_without_query(
     assert result["content"] == "LangChain full docs content"
 
 
+@pytest.mark.asyncio
+async def test_fetch_langgraph_docs_uses_configured_source(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The LangGraph docs tool should use the configured llms.txt source."""
+
+    async def fake_fetch(url: str) -> str:
+        assert url == DOC_SOURCES["langgraph"]
+        return "LangGraph current docs\nStateGraph anchor"
+
+    monkeypatch.setattr(doc_server_module, "_fetch_llms_txt_content", fake_fetch)
+
+    result = await fetch_langgraph_docs("StateGraph")
+
+    assert result["source"] == "langgraph"
+    assert result["url"] == DOC_SOURCES["langgraph"]
+    assert result["content"] == "StateGraph anchor"
+
+
+@pytest.mark.asyncio
+async def test_fetch_langgraph_docs_returns_full_content_without_query(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The LangGraph docs tool should return full content when no query is given."""
+
+    async def fake_fetch(url: str) -> str:
+        return "LangGraph full docs content"
+
+    monkeypatch.setattr(doc_server_module, "_fetch_llms_txt_content", fake_fetch)
+
+    result = await fetch_langgraph_docs()
+
+    assert result["source"] == "langgraph"
+    assert result["content"] == "LangGraph full docs content"
+
+
 def test_documentation_source_configuration_is_complete() -> None:
-    """All expected llms.txt sources and Tavily domains should be configured."""
     assert DOC_SOURCES == {
         "fastapi": "https://fastapi.tiangolo.com/llms.txt",
         "pydantic": "https://docs.pydantic.dev/llms.txt",
