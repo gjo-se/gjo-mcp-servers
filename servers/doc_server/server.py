@@ -462,7 +462,8 @@ mcp.tool(
     name="web_search_documentation",
     description=(
         "Search official documentation domains via Tavily for SQLAlchemy, Alembic, "
-        "pytest and related tooling when no llms.txt source exists."
+        "pytest, React, TypeScript, Tailwind CSS, Vite, React Router, Syncfusion EJ2 "
+        "and related tooling when no llms.txt source exists."
     ),
 )
 

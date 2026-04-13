@@ -2,6 +2,15 @@
 
 Used by check_doc_sources.py (gjo-se.com) to verify that every installed
 dependency has a known MCP documentation source.
+
+Scoped-Package-Strategie
+------------------------
+Scoped npm packages (``@scope/pkg``) werden exakt unter ihrem npm-Namen als
+Registry-Key geführt – nach Lowercasing, ohne Normalisierung der Slash-Trennung.
+Der Consumer ``normalize_package_name`` in ``check_doc_sources.py`` behält
+Scoped-Packages nach Lowercasing und Underscore→Hyphen-Ersetzung unverändert,
+sodass ``@syncfusion/ej2-base`` sowohl im Paketmanager als auch im Registry-Key
+identisch ist. Keine zusätzliche Abstraktion oder Alias-Schicht ist nötig.
 """
 
 from __future__ import annotations
@@ -28,4 +37,14 @@ DOC_REGISTRY: dict[str, dict[str, str]] = {
     "tailwindcss": {"type": "web_search", "domain": "tailwindcss.com"},
     "vite": {"type": "web_search", "domain": "vitejs.dev"},
     "react-router-dom": {"type": "web_search", "domain": "reactrouter.com"},
+    # web_search-Quellen – Syncfusion (Scoped npm packages, exakter npm-Name als Key)
+    "@syncfusion/ej2-base": {"type": "web_search", "domain": "ej2.syncfusion.com"},
+    "@syncfusion/ej2-react-grids": {
+        "type": "web_search",
+        "domain": "ej2.syncfusion.com",
+    },
+    "@syncfusion/ej2-react-charts": {
+        "type": "web_search",
+        "domain": "ej2.syncfusion.com",
+    },
 }
