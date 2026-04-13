@@ -73,6 +73,15 @@ def test_package_names_are_normalized() -> None:
         assert " " not in pkg, f"Key {pkg!r} contains whitespace"
 
 
+def test_syncfusion_domain_in_documentation_domains() -> None:
+    """ej2.syncfusion.com must be listed in DOCUMENTATION_DOMAINS.
+
+    Regression guard: ensures the Syncfusion domain is reachable via
+    web_search_documentation and not accidentally removed from the allow-list.
+    """
+    assert "ej2.syncfusion.com" in DOCUMENTATION_DOMAINS
+
+
 @pytest.mark.parametrize("source_name", list(DOC_SOURCES.keys()))
 def test_each_doc_source_has_registry_entry(source_name: str) -> None:
     """Parametrized: each DOC_SOURCES key appears in DOC_REGISTRY."""

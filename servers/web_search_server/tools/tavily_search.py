@@ -38,6 +38,8 @@ DOCUMENTATION_DOMAINS: list[str] = [
     "tailwindcss.com",
     "vitejs.dev",
     "reactrouter.com",
+    # Frontend – Syncfusion
+    "ej2.syncfusion.com",
 ]
 
 DEFAULT_MAX_RESULTS: int = 3
@@ -45,8 +47,30 @@ DEFAULT_MAX_RESULTS: int = 3
 # Sentinel: pass to build_tavily_search_tool to disable domain filtering.
 NO_DOMAIN_FILTER: list[str] = []
 
+# Isolated domain list for Syncfusion EJ2 queries.
+# Tavily's include_domains filter does not reliably surface ej2.syncfusion.com
+# when mixed with a large multi-domain allow-list.  Routing Syncfusion-specific
+# queries through this single-entry list restores reliable results.
+SYNCFUSION_DOMAINS: list[str] = ["ej2.syncfusion.com"]
+
+# Keywords that indicate a query targets Syncfusion EJ2 documentation.
+SYNCFUSION_KEYWORDS: frozenset[str] = frozenset(
+    {
+        "syncfusion",
+        "@syncfusion",
+        "ej2-react",
+        "ej2-grids",
+        "ej2-charts",
+        "columndirective",
+        "columnsdirective",
+        "gridcomponent",
+        "chartcomponent",
+    }
+)
+
 DEFAULT_DESCRIPTION: str = (
-    "Search official documentation sources for SQLAlchemy, Alembic, pytest and "
+    "Search official documentation sources for SQLAlchemy, Alembic, pytest, "
+    "React, TypeScript, Tailwind CSS, Vite, React Router, Syncfusion EJ2 and "
     "related tooling. Use this when no llms.txt source is available."
 )
 
@@ -55,6 +79,22 @@ GENERIC_DESCRIPTION: str = (
     "Use for general research, news, blog posts, and topics "
     "not covered by official documentation."
 )
+
+
+def _is_syncfusion_query(query: str) -> bool:
+    """Return True when the query targets Syncfusion EJ2 documentation.
+
+    Checks for case-insensitive occurrence of any keyword in
+    :data:`SYNCFUSION_KEYWORDS` within *query*.
+
+    Args:
+        query: The raw search query string.
+
+    Returns:
+        ``True`` if the query is Syncfusion-specific, ``False`` otherwise.
+    """
+    lower = query.lower()
+    return any(keyword in lower for keyword in SYNCFUSION_KEYWORDS)
 
 
 def _resolve_tavily_api_key() -> str:
@@ -197,6 +237,13 @@ def web_search_documentation(
 
     This is the primary MCP tool exposed by the ``web_search_server``.
 
+    Syncfusion EJ2 routing:
+        Queries that match :func:`_is_syncfusion_query` are routed through an
+        isolated ``["ej2.syncfusion.com"]`` domain filter.  Tavily does not
+        reliably surface ``ej2.syncfusion.com`` when it is included in a large
+        multi-domain allow-list, so the isolated filter restores reliable results
+        without changing the external tool contract.
+
     Args:
         query: Documentation-focused search query.
         max_results: Maximum number of results to return.
@@ -207,9 +254,12 @@ def web_search_documentation(
     Raises:
         ValueError: When *query* is blank or *max_results* is not positive.
     """
+    domains = (
+        SYNCFUSION_DOMAINS if _is_syncfusion_query(query) else DOCUMENTATION_DOMAINS
+    )
     return search_documentation(
         query,
-        include_domains=DOCUMENTATION_DOMAINS,
+        include_domains=domains,
         max_results=max_results,
         include_answer=False,
         description=DEFAULT_DESCRIPTION,

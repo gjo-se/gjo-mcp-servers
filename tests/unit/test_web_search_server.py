@@ -10,6 +10,8 @@ from servers.web_search_server.server import app, mcp
 from servers.web_search_server.tools.tavily_search import (
     DOCUMENTATION_DOMAINS,
     NO_DOMAIN_FILTER,
+    SYNCFUSION_DOMAINS,
+    _is_syncfusion_query,
     web_search,
     web_search_documentation,
 )
@@ -256,3 +258,108 @@ def test_documentation_domains_contains_all_expected_entries() -> None:
         "reactrouter.com",
     }
     assert expected.issubset(set(DOCUMENTATION_DOMAINS))
+
+
+# ---------------------------------------------------------------------------
+# _is_syncfusion_query – keyword detection
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "Syncfusion EJ2 Grid column definitions",
+        "syncfusion react charts getting started",
+        "@syncfusion/ej2-react-grids ColumnDirective",
+        "ej2-grids paging feature",
+        "ej2-charts tooltip configuration",
+        "GridComponent dataSource binding",
+        "ColumnsDirective usage example",
+        "ChartComponent axis settings",
+    ],
+)
+def test_is_syncfusion_query_returns_true_for_syncfusion_queries(
+    query: str,
+) -> None:
+    """_is_syncfusion_query must detect all Syncfusion-related queries."""
+    assert _is_syncfusion_query(query) is True
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "SQLAlchemy async session",
+        "Alembic autogenerate migrations",
+        "React useState hook",
+        "Tailwind CSS grid layout",
+        "FastAPI dependency injection",
+        "pytest fixtures tutorial",
+    ],
+)
+def test_is_syncfusion_query_returns_false_for_generic_queries(
+    query: str,
+) -> None:
+    """_is_syncfusion_query must not trigger on unrelated queries."""
+    assert _is_syncfusion_query(query) is False
+
+
+def test_is_syncfusion_query_is_case_insensitive() -> None:
+    """_is_syncfusion_query must match regardless of letter casing."""
+    assert _is_syncfusion_query("SYNCFUSION Grid overview") is True
+    assert _is_syncfusion_query("EJ2-GRIDS paging") is True
+
+
+# ---------------------------------------------------------------------------
+# web_search_documentation – Syncfusion routing
+# ---------------------------------------------------------------------------
+
+
+def test_web_search_documentation_routes_syncfusion_query_to_syncfusion_domains(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Syncfusion queries must use SYNCFUSION_DOMAINS, not DOCUMENTATION_DOMAINS."""
+    monkeypatch.setenv("TAVILY_API_KEY", "test-key-dummy")
+
+    captured_domains: list[list[str]] = []
+    original_build = tavily_module.build_tavily_search_tool
+
+    def fake_build(**kwargs: object) -> object:
+        captured_domains.append(list(kwargs.get("include_domains", [])))
+        return original_build(**kwargs)
+
+    def fake_invoke(self: object, payload: dict[str, str]) -> dict[str, object]:
+        return {"results": []}
+
+    monkeypatch.setattr(tavily_module, "build_tavily_search_tool", fake_build)
+    monkeypatch.setattr(tavily_module.TavilySearch, "invoke", fake_invoke)
+
+    web_search_documentation("Syncfusion EJ2 Grid getting started React")
+
+    assert len(captured_domains) == 1
+    assert captured_domains[0] == SYNCFUSION_DOMAINS
+    assert captured_domains[0] == ["ej2.syncfusion.com"]
+
+
+def test_web_search_documentation_routes_generic_query_to_documentation_domains(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Non-Syncfusion queries must still use the full DOCUMENTATION_DOMAINS list."""
+    monkeypatch.setenv("TAVILY_API_KEY", "test-key-dummy")
+
+    captured_domains: list[list[str]] = []
+    original_build = tavily_module.build_tavily_search_tool
+
+    def fake_build(**kwargs: object) -> object:
+        captured_domains.append(list(kwargs.get("include_domains", [])))
+        return original_build(**kwargs)
+
+    def fake_invoke(self: object, payload: dict[str, str]) -> dict[str, object]:
+        return {"results": []}
+
+    monkeypatch.setattr(tavily_module, "build_tavily_search_tool", fake_build)
+    monkeypatch.setattr(tavily_module.TavilySearch, "invoke", fake_invoke)
+
+    web_search_documentation("Alembic 1.x autogenerate async")
+
+    assert len(captured_domains) == 1
+    assert captured_domains[0] == DOCUMENTATION_DOMAINS
