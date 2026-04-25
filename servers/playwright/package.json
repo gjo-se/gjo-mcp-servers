@@ -1,0 +1,13 @@
+{
+  "name": "playwright-mcp-server",
+  "version": "1.0.0",
+  "description": "Playwright MCP server for AI-driven browser automation",
+  "private": true,
+  "scripts": {
+    "start": "npx @playwright/mcp --port 8005 --caps=vision,pdf,testing"
+  },
+  "dependencies": {
+    "@playwright/mcp": "latest"
+  }
+}
+

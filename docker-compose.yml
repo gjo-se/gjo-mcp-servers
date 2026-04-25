@@ -116,8 +116,15 @@ services:
 
   playwright-mcp:
     profiles: ["full-stack"]
-    image: node:22-slim
-    command: ["npx", "@playwright/mcp", "--port", "8005"]
+    build: ./servers/playwright
+    command:
+      [
+        "npx",
+        "@playwright/mcp",
+        "--port",
+        "8005",
+        "--caps=vision,pdf,testing",
+      ]
     ports:
       - "${PORT_PLAYWRIGHT}:8005"
     healthcheck:
@@ -131,7 +138,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 15s
+      start_period: 30s
     restart: unless-stopped
     networks:
       - mcp_external
