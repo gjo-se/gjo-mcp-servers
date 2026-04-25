@@ -13,3 +13,10 @@ dist/
 .pyright/
 .mypy_cache/
 
+# Node.js
+node_modules/
+package-lock.json
+npm-debug.log*
+.npm/
+
+servers/playwright/node_modules/

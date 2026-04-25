@@ -7,6 +7,11 @@
     "web-search-server": {
       "type": "http",
       "url": "http://localhost:8006/mcp"
+    },
+    "playwright-server": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest", "--headless", "--caps=vision,pdf,testing"]
     }
   }
 }

@@ -121,8 +121,6 @@ services:
       [
         "npx",
         "@playwright/mcp",
-        "--host",
-        "0.0.0.0",
         "--port",
         "8005",
         "--caps=vision,pdf,testing",
