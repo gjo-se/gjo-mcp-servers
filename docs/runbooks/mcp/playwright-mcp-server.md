@@ -23,6 +23,8 @@ Er basiert auf `@playwright/mcp` (Microsoft, npm) und ist ausschließlich für
 | `PORT_PLAYWRIGHT` | `8005` | Host-Port (`.env`) |
 | Container-Port | `8005` | Interner Port |
 | Capabilities | `vision,pdf,testing` | Aktivierte MCP-Erweiterungen |
+| Host | `0.0.0.0` | Bind-Adresse (`--host=0.0.0.0` für IPv4-Healthcheck) |
+| Transport | StreamableHTTP | Endpoint `/mcp` (Standard); `/sse` verfügbar (Legacy) |
 
 ---
 
