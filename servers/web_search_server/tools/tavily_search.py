@@ -32,12 +32,17 @@ DOCUMENTATION_DOMAINS: list[str] = [
     "www.python-httpx.org",
     "playwright.dev",
     "docs.github.com",
+    # Backend – LangChain OSS Python / tenacity
+    "python.langchain.com",
+    "tenacity.readthedocs.io",
     # Frontend – React / TypeScript / Tooling
     "react.dev",
     "typescriptlang.org",
     "tailwindcss.com",
     "vitejs.dev",
     "reactrouter.com",
+    # Frontend – Charts
+    "recharts.org",
     # Frontend – Syncfusion
     "ej2.syncfusion.com",
 ]

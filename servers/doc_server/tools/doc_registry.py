@@ -19,7 +19,11 @@ DOC_REGISTRY: dict[str, dict[str, str]] = {
     # llms.txt-Quellen (fetch_*_docs Tools) – Backend
     "fastapi": {"type": "llms_txt", "tool": "fetch_fastapi_docs"},
     "pydantic": {"type": "llms_txt", "tool": "fetch_pydantic_docs"},
-    "langchain": {"type": "llms_txt", "tool": "fetch_langchain_docs"},
+    # langchain OSS Python → python.langchain.com (web_search_documentation).
+    # fetch_langchain_docs = docs.langchain.com/llms.txt (LangSmith/Fleet, 52 %).
+    # For LangSmith/Tracing/Fleet → use fetch_langchain_docs directly.
+    "langchain": {"type": "web_search", "domain": "python.langchain.com"},
+    "langsmith": {"type": "llms_txt", "tool": "fetch_langchain_docs"},
     "langgraph": {"type": "llms_txt", "tool": "fetch_langgraph_docs"},
     "fastmcp": {"type": "llms_txt", "tool": "fetch_fastmcp_docs"},
     "pycharm": {"type": "llms_txt", "tool": "fetch_pycharm_docs"},
@@ -29,6 +33,7 @@ DOC_REGISTRY: dict[str, dict[str, str]] = {
     "pytest": {"type": "web_search", "domain": "docs.pytest.org"},
     "pytest-asyncio": {"type": "web_search", "domain": "pytest-asyncio.readthedocs.io"},
     "httpx": {"type": "web_search", "domain": "www.python-httpx.org"},
+    "tenacity": {"type": "web_search", "domain": "tenacity.readthedocs.io"},
     "playwright": {"type": "web_search", "domain": "playwright.dev"},
     "github-copilot": {"type": "web_search", "domain": "docs.github.com"},
     # web_search-Quellen – Frontend
@@ -37,6 +42,7 @@ DOC_REGISTRY: dict[str, dict[str, str]] = {
     "tailwindcss": {"type": "web_search", "domain": "tailwindcss.com"},
     "vite": {"type": "web_search", "domain": "vitejs.dev"},
     "react-router-dom": {"type": "web_search", "domain": "reactrouter.com"},
+    "recharts": {"type": "web_search", "domain": "recharts.org"},
     # web_search-Quellen – Syncfusion (Scoped npm packages, exakter npm-Name als Key)
     "@syncfusion/ej2-base": {"type": "web_search", "domain": "ej2.syncfusion.com"},
     "@syncfusion/ej2-react-grids": {
